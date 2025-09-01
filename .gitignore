@@ -41,7 +41,6 @@ next-env.d.ts
 __pycache__/
 logs/
 stores/
-mlops/models/
 mlflow/
 results/
 workspaces/
