@@ -21,9 +21,6 @@ VITAL_SIGNS: Dict[str, str] = {
     "Heart rate": "heart_rate",
     "Respiratory rate": "respiratory_rate",
     "Body Mass Index": "bmi",
-    "QOLS": "qols",
-    "DALY": "daly",
-    "QALY": "qaly",
     "Chloride": "chloride",
     "Sodium": "sodium",
     "Calcium": "calcium",
@@ -41,9 +38,8 @@ VITAL_SIGNS: Dict[str, str] = {
 def load_datasets(input_dir: str = INPUT_DIR):
     patients = pd.read_csv(f"{input_dir}/patients.csv")
     conditions = pd.read_csv(f"{input_dir}/conditions.csv")
-    medications = pd.read_csv(f"{input_dir}/medications.csv")
     observations = pd.read_csv(f"{input_dir}/observations.csv")
-    return patients, conditions, medications, observations
+    return patients, conditions, observations
 
 
 # -------------------------
@@ -137,7 +133,7 @@ def build_feature_table(
 
 
 def main():
-    patients, conditions, medications, observations = load_datasets(INPUT_DIR)
+    patients, conditions, observations = load_datasets(INPUT_DIR)
     features = build_feature_table(patients, conditions, observations)
 
     # Train/test split (80/20, stratified)

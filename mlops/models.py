@@ -39,7 +39,7 @@ def train_xgb_classifier_high_recall(
     param_grid = {
         "n_estimators": [300, 500, 700],
         "max_depth": [4, 6, 8],
-        "learning_rate": [0.01, 0.05, 0.1],
+        "learning_rate": [0.01, 0.005, 0.001],
         "subsample": [0.8, 1.0],
         "colsample_bytree": [0.8, 1.0],
     }
@@ -65,13 +65,23 @@ def train_xgb_classifier_high_recall(
     best_model = grid_search.best_estimator_
     y_pred = best_model.predict(X_test)
 
+    desired_order = ["High", "Moderate", "Low"]
+    order_indices = [np.where(le.classes_ == cls)[0][0] for cls in desired_order]
+
     metrics = {
         "best_params": grid_search.best_params_,
         "best_cv_high_recall": grid_search.best_score_,
         "test_accuracy": accuracy_score(y_test, y_pred),
-        "test_recall": recall_score(y_test, y_pred, average=None)[high_index],
-        "classification_report": classification_report(y_test, y_pred, target_names=le.classes_),
-        "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
+        "test_recall": recall_score(y_test, y_pred, average=None, labels=order_indices)[0],
+        "classification_report": classification_report(
+            y_test, y_pred,
+            labels=order_indices,
+            target_names=desired_order
+        ),
+        "confusion_matrix": confusion_matrix(
+            y_test, y_pred,
+            labels=order_indices
+        ).tolist(),
     }
 
     return best_model, le, metrics, (y_test, y_pred)

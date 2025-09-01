@@ -13,14 +13,14 @@ app = typer.Typer()
 
 TEST_FILE = "mlops/data/processed/test_patient_features.csv"
 MODEL_FILE = "mlops/models/xgb_model.pkl"
-
+LABEL_ENCODER_FILE = "mlops/models/label_encoder.pkl"
 
 @app.command()
-def evaluate(model_fp: str = MODEL_FILE, data_fp: str = TEST_FILE, label: str = "risk_level", high_label_name: str = "High"):
+def evaluate(model_fp: str = MODEL_FILE, le_fp: str = LABEL_ENCODER_FILE,  data_fp: str = TEST_FILE, label: str = "risk_level", high_label_name: str = "High"):
     """Evaluate trained model on the held-out test set."""
     # Load model + encoder
-    bundle = joblib.load(model_fp)
-    model, le = bundle["model"], bundle["label_encoder"]
+    model = joblib.load(model_fp)
+    le = joblib.load(le_fp)
 
     # Load test set
     df = pd.read_csv(data_fp)

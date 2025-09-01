@@ -35,4 +35,16 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# mlops
+*.csv
+*.pkl
+__pycache__/
+logs/
+stores/
+mlops/models/
+mlflow/
+results/
+workspaces/
+efs/
+
 .vscode/
