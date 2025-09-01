@@ -20,8 +20,9 @@ except OSError:
 # Config MLflow
 MODEL_REGISTRY = Path(f"{EFS_DIR}/mlflow")
 Path(MODEL_REGISTRY).mkdir(parents=True, exist_ok=True)
-MLFLOW_TRACKING_URI = "file://" + str(MODEL_REGISTRY.absolute())
-mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+MLFLOW_TRACKING_URI = str(MODEL_REGISTRY.absolute())
+# mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+mlflow.set_tracking_uri("http://127.0.0.1:5000")
 
 # Logger
 logging_config = {

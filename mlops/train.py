@@ -1,44 +1,51 @@
-import joblib
 import typer
 import pandas as pd
-import subprocess
-from models import train_xgb_classifier_high_recall
+import joblib
+import mlflow
+import mlflow.xgboost
 from config import logger
-import os
+from models import train_xgb_classifier_high_recall
+from pathlib import Path
 
-app = typer.Typer()
-
-# File locations
+# Constants
 TRAIN_FILE = "mlops/data/processed/train_patient_features.csv"
 MODEL_FILE = "mlops/models/xgb_model.pkl"
 LABEL_ENCODER_FILE = "mlops/models/label_encoder.pkl"
 
-# Ensure the model directory exists
-model_dir = os.path.dirname(MODEL_FILE)
-os.makedirs(model_dir, exist_ok=True)
-
+app = typer.Typer()
 
 @app.command()
-def train(data_fp: str = TRAIN_FILE, model_fp: str = MODEL_FILE, le_fp: str = LABEL_ENCODER_FILE, label: str = "risk_level"):
-    """
-    Run data preprocessing (data.py), then train XGB classifier on training data and save model.
-    """
-    # --- Step 1: Run data.py to regenerate train/test CSVs ---
-    logger.info("INFO Running data preprocessing pipeline (data.py)...")
-    subprocess.run(["python", "mlops/data.py"], check=True)
+def train():
+    logger.info("Loading training data...")
+    df_train = pd.read_csv(TRAIN_FILE)
 
-    # --- Step 2: Load training data ---
-    df = pd.read_csv(data_fp)
-    logger.info(f"Loaded training data with {len(df)} rows.")
+    logger.info("Training XGBoost model...")
+    best_model, le, metrics, (y_test, y_pred) = train_xgb_classifier_high_recall(df_train)
 
-    # --- Step 3: Train model ---
-    best_model, le, metrics, _ = train_xgb_classifier_high_recall(df, label=label)
+    # Log with MLflow
+    with mlflow.start_run() as run:
+        for param, value in metrics["best_params"].items():
+            mlflow.log_param(param, value)
 
-    # --- Step 4: Save model + label encoder ---
-    joblib.dump(best_model, model_fp)
-    joblib.dump(le, le_fp)
+        mlflow.log_metric("accuracy", metrics["test_accuracy"])
+        mlflow.log_metric("f1_score", metrics["test_f1"])
+        mlflow.log_metric("recall_high", metrics["test_recall_high"])
 
-    logger.info(f"SUCCESS Model saved to {model_fp}")
+        mlflow.xgboost.log_model(
+            best_model,
+            artifact_path="model",
+            registered_model_name="ehr_xgb_model"
+        )
+
+        logger.info(f"Model logged to MLflow (run_id={run.info.run_id})")
+
+    # Save locally too
+    Path("mlops/models").mkdir(parents=True, exist_ok=True)
+    joblib.dump(best_model, MODEL_FILE)
+    joblib.dump(le, LABEL_ENCODER_FILE)
+
+    logger.info(f"Model saved to {MODEL_FILE}")
+    logger.info(f"Label encoder saved to {LABEL_ENCODER_FILE}")
     logger.info("Training metrics:")
     for k, v in metrics.items():
         logger.info(f"{k}: {v}")

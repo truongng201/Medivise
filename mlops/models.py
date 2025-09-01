@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, make_scorer, recall_score
 from sklearn.preprocessing import LabelEncoder
 from xgboost import XGBClassifier
+from sklearn.metrics import f1_score
 
 
 def train_xgb_classifier_high_recall(
@@ -65,23 +66,14 @@ def train_xgb_classifier_high_recall(
     best_model = grid_search.best_estimator_
     y_pred = best_model.predict(X_test)
 
-    desired_order = ["High", "Moderate", "Low"]
-    order_indices = [np.where(le.classes_ == cls)[0][0] for cls in desired_order]
-
     metrics = {
         "best_params": grid_search.best_params_,
         "best_cv_high_recall": grid_search.best_score_,
         "test_accuracy": accuracy_score(y_test, y_pred),
-        "test_recall": recall_score(y_test, y_pred, average=None, labels=order_indices)[0],
-        "classification_report": classification_report(
-            y_test, y_pred,
-            labels=order_indices,
-            target_names=desired_order
-        ),
-        "confusion_matrix": confusion_matrix(
-            y_test, y_pred,
-            labels=order_indices
-        ).tolist(),
+        "test_f1": f1_score(y_test, y_pred, average="weighted"),
+        "test_recall_high": recall_score(y_test, y_pred, average=None)[high_index],
+        "classification_report": classification_report(y_test, y_pred, target_names=le.classes_),
+        "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
     }
 
     return best_model, le, metrics, (y_test, y_pred)
