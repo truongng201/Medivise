@@ -23,7 +23,8 @@ def train_xgb_classifier_high_recall(
     X = df.drop(columns=[label])
     X = pd.get_dummies(X)
     X = X.apply(pd.to_numeric, errors="coerce").fillna(0)
-
+    feature_columns = X.columns.tolist()
+    
     # Train/test split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=random_state, stratify=y
@@ -76,4 +77,4 @@ def train_xgb_classifier_high_recall(
         "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
     }
 
-    return best_model, le, metrics, (y_test, y_pred)
+    return best_model, le, metrics, (y_test, y_pred), feature_columns
