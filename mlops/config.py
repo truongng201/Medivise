@@ -1,36 +1,41 @@
 # config.py
-import logging
 import os
 import sys
+import logging
+import logging.config
 from pathlib import Path
-
 import mlflow
 
-# Directories
-ROOT_DIR = Path(__file__).parent.parent.absolute()
-LOGS_DIR = Path(ROOT_DIR, "logs")
+# ---------- Paths ----------
+ROOT_DIR = Path(__file__).parent.parent.resolve()
+LOGS_DIR = ROOT_DIR / "logs"
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
-EFS_DIR = f"mlops/efs"
-try:
-    Path(EFS_DIR).mkdir(parents=True, exist_ok=True)
-except OSError:
-    EFS_DIR = Path(ROOT_DIR, "efs")
-    Path(EFS_DIR).mkdir(parents=True, exist_ok=True)
 
-# Config MLflow
-MODEL_REGISTRY = Path(f"{EFS_DIR}/mlflow")
-Path(MODEL_REGISTRY).mkdir(parents=True, exist_ok=True)
-MLFLOW_TRACKING_URI = str(MODEL_REGISTRY.absolute())
-# mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
+# ---------- MLflow ----------
+# You’re running an MLflow server locally on port 5000
+MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
-# Logger
+# Default experiment name (can be overridden with env var)
+DEFAULT_EXPERIMENT = os.getenv("MLFLOW_EXPERIMENT_NAME", "ehr_xgb_experiment")
+
+def configure_experiment(name: str | None = None) -> str:
+    exp_name = name or DEFAULT_EXPERIMENT
+    mlflow.set_experiment(exp_name)
+    return exp_name
+
+# ---------- Logging ----------
 logging_config = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
         "minimal": {"format": "%(message)s"},
-        "detailed": {"format": "%(levelname)s %(asctime)s [%(name)s:%(filename)s:%(funcName)s:%(lineno)d]\n%(message)s\n"},
+        "detailed": {
+            "format": (
+                "%(levelname)s %(asctime)s "
+                "[%(name)s:%(filename)s:%(funcName)s:%(lineno)d]\n%(message)s\n"
+            )
+        },
     },
     "handlers": {
         "console": {
@@ -41,17 +46,17 @@ logging_config = {
         },
         "info": {
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": Path(LOGS_DIR, "info.log"),
-            "maxBytes": 10485760,  # 1 MB
-            "backupCount": 10,
+            "filename": str(LOGS_DIR / "info.log"),
+            "maxBytes": 10 * 1024 * 1024,  # 10 MB
+            "backupCount": 3,
             "formatter": "detailed",
             "level": logging.INFO,
         },
         "error": {
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": Path(LOGS_DIR, "error.log"),
-            "maxBytes": 10485760,  # 1 MB
-            "backupCount": 10,
+            "filename": str(LOGS_DIR / "error.log"),
+            "maxBytes": 10 * 1024 * 1024,
+            "backupCount": 3,
             "formatter": "detailed",
             "level": logging.ERROR,
         },
@@ -63,6 +68,7 @@ logging_config = {
     },
 }
 
-# Logger
 logging.config.dictConfig(logging_config)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
+
+logger.info(f"[MLflow] tracking_uri={MLFLOW_TRACKING_URI} | default_experiment={DEFAULT_EXPERIMENT}")

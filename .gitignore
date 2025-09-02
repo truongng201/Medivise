@@ -38,13 +38,18 @@ next-env.d.ts
 # mlops
 *.csv
 *.pkl
+*.txt
+mlartifacts/
 __pycache__/
 logs/
 stores/
+data/
 models/
 mlflow/
 results/
 workspaces/
 efs/
+mlruns/
+mlflow.db
 
 .vscode/
