@@ -93,7 +93,7 @@ def _preprocess_for_inference(df: pd.DataFrame, feature_columns: List[str]) -> p
 def evaluate(
     data_fp: str = typer.Option("mlops/data/processed/test_patient_features.csv", help="CSV with labels"),
     label_col: str = typer.Option("risk_level", help="Label column name"),
-    model_uri: str = typer.Option("models:/ehr_xgb_model/9", help="MLflow model URI"),
+    model_uri: str = typer.Option("models:/ehr_xgb_model/2", help="MLflow model URI"),
     output_json: str = typer.Option(None, help="Optional: save metrics JSON"),
 ):
     # Ensure experiment is set (even if we don't log metrics here, keeps runs consistent)

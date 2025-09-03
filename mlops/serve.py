@@ -14,14 +14,14 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from config import configure_experiment, logger
+from predict import _load_model_and_artifacts, _preprocess_for_inference
 
-# ---------- Feature schema ----------
 class FeatureRecord(BaseModel):
     gender: str
     race: str
     ethnicity: str
-    pain_severity: str
     tobacco_smoking_status: str
+    pain_severity: Optional[float] = None
     age: Optional[float] = None
     bmi: Optional[float] = None
     calcium: Optional[float] = None
@@ -41,44 +41,11 @@ class PredictPayload(BaseModel):
     records: List[FeatureRecord] = Field(..., description="List of patient feature records")
 
 # ---------- Config ----------
-MODEL_URI = os.getenv("MODEL_URI", "models:/ehr_xgb_model/1")
+MODEL_URI = os.getenv("MODEL_URI", "models:/ehr_xgb_model/2")
 CONFIDENCE_THRESHOLD = float(os.getenv("PRED_THRESHOLD", "0.0"))
 
 # Storage for global resources
 _resources: Dict[str, Any] = {}
-
-# ---------- Helpers ----------
-def _preprocess_for_inference(df: pd.DataFrame, feature_columns: List[str]) -> pd.DataFrame:
-    X = pd.get_dummies(df, drop_first=False)
-    X = X.apply(pd.to_numeric, errors="coerce")
-    num_cols = X.select_dtypes(include=["number"]).columns
-    X[num_cols] = X[num_cols].astype("float64")
-    X = X.reindex(columns=feature_columns, fill_value=0.0)
-    X = X.fillna(0.0)
-    return X
-
-def _load_model_and_artifacts(model_uri: str):
-    model = mlflow.xgboost.load_model(model_uri)
-    client = MlflowClient()
-
-    _, name, alias_or_version = model_uri.split("/", 2)
-    try:
-        mv = client.get_model_version_by_alias(name, alias_or_version)
-    except Exception:
-        mv = client.get_model_version(name, alias_or_version)
-    run_id = mv.run_id
-
-    feat_path = client.download_artifacts(run_id, "artifacts/feature_columns.json")
-    cls_path  = client.download_artifacts(run_id, "artifacts/label_classes.json")
-
-    feature_columns = json.load(open(feat_path))["feature_columns"]
-    classes = np.array(json.load(open(cls_path))["classes"])
-
-    le = LabelEncoder()
-    le.classes_ = classes
-
-    meta = {"model_name": name, "model_version": mv.version, "run_id": run_id}
-    return model, le, feature_columns, meta
 
 # ---------- Lifespan ----------
 @asynccontextmanager
@@ -127,34 +94,28 @@ def meta():
 
 @app.post("/predict")
 def predict(payload: PredictPayload):
-    if "model" not in _resources or "label_encoder" not in _resources:
-        raise HTTPException(status_code=500, detail="Model not loaded")
-
+    # Convert incoming records to DataFrame
     df = pd.DataFrame([r.model_dump() for r in payload.records])
+    if df.empty:
+        return {"model": _resources["meta"], "results": []}
+
+    # Preprocess with the **same** steps as train/evaluate/predict
     X = _preprocess_for_inference(df, _resources["feature_columns"])
-    model = _resources["model"]
-    le = _resources["label_encoder"]
 
-    preds = model.predict(X)
-    labels = le.inverse_transform(preds)
+    # Predict
+    preds = _resources["model"].predict(X)
+    labels = _resources["label_encoder"].inverse_transform(preds)
 
-    results: List[Dict[str, Any]] = []
-    probs = model.predict_proba(X) if hasattr(model, "predict_proba") else None
-    classes = list(le.classes_)
-    use_other = CONFIDENCE_THRESHOLD > 0 and ("other" in classes) and (probs is not None)
+    results: List[Dict[str, Any]] = [{"prediction": str(lbl)} for lbl in labels]
 
-    for i in range(len(X)):
-        item: Dict[str, Any] = {"prediction": str(labels[i])}
-        if probs is not None:
-            proba_map = {str(classes[j]): float(probs[i, j]) for j in range(len(classes))}
-            item["probabilities"] = proba_map
-            if use_other:
-                pred_label = str(labels[i])
-                if proba_map.get(pred_label, 0.0) < CONFIDENCE_THRESHOLD:
-                    item["prediction"] = "other"
-        results.append(item)
+    # Probabilities (if supported)
+    if hasattr(_resources["model"], "predict_proba"):
+        probs = _resources["model"].predict_proba(X)
+        proba_cols = [f"proba_{c}" for c in _resources["label_encoder"].classes_]
+        for i, row in enumerate(probs):
+            results[i].update({proba_cols[j]: float(row[j]) for j in range(len(proba_cols))})
 
-    return {"results": results}
+    return {"model": _resources["meta"], "results": results}
 
 # ---------- Local run ----------
 if __name__ == "__main__":
