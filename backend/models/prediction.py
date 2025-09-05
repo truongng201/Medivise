@@ -1,0 +1,27 @@
+from typing import Optional, List
+from pydantic import BaseModel, Field
+
+
+class FeatureRecord(BaseModel):
+    gender: str
+    race: str
+    ethnicity: str
+    tobacco_smoking_status: str
+    pain_severity: Optional[float] = None
+    age: Optional[float] = None
+    bmi: Optional[float] = None
+    calcium: Optional[float] = None
+    carbon_dioxide: Optional[float] = None
+    chloride: Optional[float] = None
+    creatinine: Optional[float] = None
+    diastolic_bp: Optional[float] = None
+    glucose: Optional[float] = None
+    heart_rate: Optional[float] = None
+    potassium: Optional[float] = None
+    respiratory_rate: Optional[float] = None
+    sodium: Optional[float] = None
+    systolic_bp: Optional[float] = None
+    urea_nitrogen: Optional[float] = None
+    
+class PredictPayload(BaseModel):
+    records: List[FeatureRecord] = Field(..., description="List of patient feature records")

@@ -1,0 +1,83 @@
+version: "3.9"
+name: medivise-backend
+
+services:
+  postgres:
+    image: postgres:17.6
+    container_name: mlflow_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: medivise
+      POSTGRES_PASSWORD: medivise
+      POSTGRES_DB: medivisedb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: mlflow_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"  # S3 API
+      - "9001:9001"  # MinIO Console
+    volumes:
+      - minio_data:/data
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.0.1
+    container_name: mlflow_server
+    restart: unless-stopped
+    platform: linux/amd64
+    depends_on:
+      - minio
+    ports:
+      - "5001:5000"
+    environment:
+      MLFLOW_DEFAULT_ARTIFACT_ROOT: s3://mlflow/
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+    volumes:
+      - mlflow_data:/mlflow  # store SQLite file
+    command: >
+      mlflow server 
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root s3://mlflow/
+      --host 0.0.0.0
+      --port 5000
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: medivise-backend-service
+        APP_VERSION: 1.0.0
+        ENV: dev
+    container_name: medivise-backend-service
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - minio
+      - mlflow
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: postgresql://medivise:medivise@postgres:5432/medivisedb
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      AWS_ENDPOINT_URL: http://minio:9000
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+
+volumes:
+  postgres_data:
+  minio_data:
+  mlflow_data:
