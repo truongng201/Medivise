@@ -8,27 +8,51 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, Mail, Lock, User, Phone, Calendar } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Eye, EyeOff, Mail, Lock, User, Phone, Stethoscope, Building, GraduationCap } from "lucide-react"
 
-interface SignupPageProps {
+interface DoctorSignupPageProps {
   onSignup: (userData: any) => void
   onSwitchToLogin: () => void
-  onSwitchToDoctorSignup: () => void
+  onSwitchToPatientSignup: () => void
 }
 
-export default function SignupPage({ onSignup, onSwitchToLogin, onSwitchToDoctorSignup }: SignupPageProps) {
+export default function DoctorSignupPage({
+  onSignup,
+  onSwitchToLogin,
+  onSwitchToPatientSignup,
+}: DoctorSignupPageProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
     phone: "",
-    dateOfBirth: "",
+    specialty: "",
+    licenseNumber: "",
+    hospital: "",
+    experience: "",
+    education: "",
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+
+  const specialties = [
+    "Cardiologist",
+    "Dermatologist",
+    "Endocrinologist",
+    "Gastroenterologist",
+    "General Practice",
+    "Neurologist",
+    "Oncologist",
+    "Orthopedic Surgeon",
+    "Pediatrician",
+    "Psychiatrist",
+    "Radiologist",
+    "Urologist",
+  ]
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -41,7 +65,14 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onSwitchToDoctor
     setError("")
 
     // Basic validation
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.password ||
+      !formData.confirmPassword ||
+      !formData.specialty ||
+      !formData.licenseNumber
+    ) {
       setError("Please fill in all required fields")
       setIsLoading(false)
       return
@@ -62,47 +93,32 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onSwitchToDoctor
     // Simulate API call
     setTimeout(() => {
       const userData = {
-        id: Math.floor(Math.random() * 1000) + 1,
-        userType: "patient",
+        id: Math.floor(Math.random() * 1000) + 100,
+        userType: "doctor",
         name: formData.name,
         email: formData.email,
         avatar: "/placeholder.svg",
-        phone: formData.phone || "+1 (555) 123-4567",
-        dateOfBirth: formData.dateOfBirth || "1990-01-01",
-        assignedDoctors: [{ id: 1, name: "Dr. Sarah Johnson", specialty: "Cardiologist" }],
-        // Default health data
-        age: 30,
-        gender_F: false,
-        gender_M: true,
-        race_asian: false,
-        race_black: false,
-        race_white: true,
-        ethnicity_hispanic: false,
-        ethnicity_nonhispanic: true,
-        tobacco_smoking_status_Current_every_day_smoker: false,
-        tobacco_smoking_status_Former_smoker: false,
-        tobacco_smoking_status_Never_smoker: true,
-        systolic_bp: 120,
-        diastolic_bp: 80,
-        heart_rate: 72,
-        respiratory_rate: 16,
-        pain_severity: 0,
-        bmi: 22.0,
-        calcium: 10.0,
-        carbon_dioxide: 24,
-        chloride: 100,
-        creatinine: 1.0,
-        glucose: 90,
-        potassium: 4.0,
-        sodium: 140,
-        urea_nitrogen: 15,
-        medication_count: 0,
-        bloodType: "O+",
-        address: "123 Main St, Anytown, USA 12345",
-        emergencyContact: "Emergency Contact - +1 (555) 987-6543",
-        allergies: "None",
-        medications: "None",
-        medicalConditions: "None",
+        phone: formData.phone || "+1 (555) 987-6543",
+        specialty: formData.specialty,
+        licenseNumber: formData.licenseNumber,
+        hospital: formData.hospital || "General Hospital",
+        department: formData.specialty,
+        experience: formData.experience || "5 years",
+        education: formData.education || "Medical School",
+        bio: `Experienced ${formData.specialty.toLowerCase()} dedicated to providing excellent patient care.`,
+        consultationFee: "$150",
+        availableHours: "Mon-Fri 9AM-5PM",
+        languages: "English",
+        patients: [
+          {
+            id: 1,
+            name: "John Doe",
+            age: 34,
+            lastVisit: "2024-01-10",
+            condition: "Hypertension",
+            status: "stable",
+          },
+        ],
       }
       onSignup(userData)
       setIsLoading(false)
@@ -115,16 +131,16 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onSwitchToDoctor
         {/* Header */}
         <div className="text-center space-y-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
-            <p className="text-gray-600 mt-2">Join our health platform as a patient</p>
+            <h1 className="text-3xl font-bold text-gray-900">Doctor Registration</h1>
+            <p className="text-gray-600 mt-2">Join our platform as a healthcare provider</p>
           </div>
         </div>
 
         {/* Signup Form */}
         <Card>
           <CardHeader>
-            <CardTitle>Patient Registration</CardTitle>
-            <CardDescription>Fill in your details to create your patient account</CardDescription>
+            <CardTitle>Healthcare Provider Registration</CardTitle>
+            <CardDescription>Fill in your professional details to create your doctor account</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -143,7 +159,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onSwitchToDoctor
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    placeholder="Enter your full name"
+                    placeholder="Dr. John Smith"
                     className="pl-10"
                     required
                   />
@@ -159,7 +175,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onSwitchToDoctor
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    placeholder="Enter your email"
+                    placeholder="doctor@hospital.com"
                     className="pl-10"
                     required
                   />
@@ -175,24 +191,82 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onSwitchToDoctor
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
-                    placeholder="Enter your phone number"
+                    placeholder="+1 (555) 123-4567"
                     className="pl-10"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Label htmlFor="specialty">Medical Specialty *</Label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Stethoscope className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
+                  <Select value={formData.specialty} onValueChange={(value) => handleInputChange("specialty", value)}>
+                    <SelectTrigger className="pl-10">
+                      <SelectValue placeholder="Select your specialty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {specialties.map((specialty) => (
+                        <SelectItem key={specialty} value={specialty}>
+                          {specialty}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="licenseNumber">Medical License Number *</Label>
+                <div className="relative">
+                  <GraduationCap className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
-                    id="dateOfBirth"
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                    id="licenseNumber"
+                    type="text"
+                    value={formData.licenseNumber}
+                    onChange={(e) => handleInputChange("licenseNumber", e.target.value)}
+                    placeholder="MD123456"
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="hospital">Hospital/Clinic</Label>
+                <div className="relative">
+                  <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="hospital"
+                    type="text"
+                    value={formData.hospital}
+                    onChange={(e) => handleInputChange("hospital", e.target.value)}
+                    placeholder="City General Hospital"
                     className="pl-10"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="experience">Years of Experience</Label>
+                <Input
+                  id="experience"
+                  type="text"
+                  value={formData.experience}
+                  onChange={(e) => handleInputChange("experience", e.target.value)}
+                  placeholder="5 years"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="education">Medical Education</Label>
+                <Input
+                  id="education"
+                  type="text"
+                  value={formData.education}
+                  onChange={(e) => handleInputChange("education", e.target.value)}
+                  placeholder="Harvard Medical School"
+                />
               </div>
 
               <div className="space-y-2">
@@ -256,7 +330,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onSwitchToDoctor
               </div>
 
               <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700" disabled={isLoading}>
-                {isLoading ? "Creating Account..." : "Create Patient Account"}
+                {isLoading ? "Creating Account..." : "Create Doctor Account"}
               </Button>
             </form>
 
@@ -268,12 +342,12 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onSwitchToDoctor
                 </button>
               </p>
               <p className="text-sm text-gray-600">
-                Are you a healthcare provider?{" "}
+                Need a patient account?{" "}
                 <button
-                  onClick={onSwitchToDoctorSignup}
+                  onClick={onSwitchToPatientSignup}
                   className="font-medium text-slate-800 hover:text-slate-700 underline"
                 >
-                  Sign up as Doctor
+                  Sign up as Patient
                 </button>
               </p>
             </div>

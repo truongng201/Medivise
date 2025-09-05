@@ -2,862 +2,674 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Camera, User, Heart, Shield, Bell, Save, CheckCircle, Phone, Calendar, Activity } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  CalendarIcon,
+  Edit,
+  Save,
+  MessageCircle,
+  Star,
+  Stethoscope,
+  GraduationCap,
+  Award,
+  Clock,
+  UserPlus,
+  Send,
+} from "lucide-react"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
 
 interface UserInformationProps {
   user: any
-  onUpdateUser: (userData: any) => void
+  onUpdateUser: (user: any) => void
 }
 
 export default function UserInformation({ user, onUpdateUser }: UserInformationProps) {
-  const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    address: user?.address || "",
-    emergencyContact: user?.emergencyContact || "",
-    bloodType: user?.bloodType || "",
-    dateOfBirth: user?.dateOfBirth || "",
-    allergies: user?.allergies || "",
-    medications: user?.medications || "",
-    medicalConditions: user?.medicalConditions || "",
-    // Demographics
-    age: user?.age || "",
-    gender_F: user?.gender_F || false,
-    gender_M: user?.gender_M || false,
-    race_asian: user?.race_asian || false,
-    race_black: user?.race_black || false,
-    race_white: user?.race_white || false,
-    ethnicity_hispanic: user?.ethnicity_hispanic || false,
-    ethnicity_nonhispanic: user?.ethnicity_nonhispanic || false,
-    // Lifestyle
-    tobacco_smoking_status_Current_every_day_smoker: user?.tobacco_smoking_status_Current_every_day_smoker || false,
-    tobacco_smoking_status_Former_smoker: user?.tobacco_smoking_status_Former_smoker || false,
-    tobacco_smoking_status_Never_smoker: user?.tobacco_smoking_status_Never_smoker || false,
-    // Vitals & Clinical Measurements
-    systolic_bp: user?.systolic_bp || "",
-    diastolic_bp: user?.diastolic_bp || "",
-    heart_rate: user?.heart_rate || "",
-    respiratory_rate: user?.respiratory_rate || "",
-    pain_severity: user?.pain_severity || "",
-    // Lab Results
-    bmi: user?.bmi || "",
-    calcium: user?.calcium || "",
-    carbon_dioxide: user?.carbon_dioxide || "",
-    chloride: user?.chloride || "",
-    creatinine: user?.creatinine || "",
-    glucose: user?.glucose || "",
-    potassium: user?.potassium || "",
-    sodium: user?.sodium || "",
-    urea_nitrogen: user?.urea_nitrogen || "",
-    // Treatment-related
-    medication_count: user?.medication_count || "",
-  })
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedUser, setEditedUser] = useState(user)
+  const [selectedDoctor, setSelectedDoctor] = useState<any>(null)
+  const [showContactDialog, setShowContactDialog] = useState(false)
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false)
+  const [showRequestDialog, setShowRequestDialog] = useState(false)
+  const [contactMessage, setContactMessage] = useState("")
+  const [contactPriority, setContactPriority] = useState("normal")
+  const [appointmentDate, setAppointmentDate] = useState<Date>()
+  const [appointmentTime, setAppointmentTime] = useState("")
+  const [appointmentType, setAppointmentType] = useState("consultation")
+  const [requestSpecialty, setRequestSpecialty] = useState("")
+  const [requestReason, setRequestReason] = useState("")
+  const [requestUrgency, setRequestUrgency] = useState("routine")
 
-  const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    smsNotifications: false,
-    appointmentReminders: true,
-    medicationReminders: true,
-    healthTips: false,
-  })
+  // Mock data for assigned doctors
+  const assignedDoctors = [
+    {
+      id: 1,
+      name: "Dr. Sarah Johnson",
+      specialty: "Cardiology",
+      hospital: "City General Hospital",
+      phone: "+1 (555) 123-4567",
+      email: "sarah.johnson@hospital.com",
+      avatar: "/placeholder.svg?height=40&width=40",
+      rating: 4.9,
+      experience: "15 years",
+      education: "Harvard Medical School",
+      status: "Available",
+      nextAvailable: "Today, 2:00 PM",
+      languages: ["English", "Spanish"],
+      specializations: ["Heart Surgery", "Preventive Cardiology", "Interventional Cardiology"],
+    },
+    {
+      id: 2,
+      name: "Dr. Michael Chen",
+      specialty: "Dermatology",
+      hospital: "Metro Health Center",
+      phone: "+1 (555) 987-6543",
+      email: "michael.chen@metro.com",
+      avatar: "/placeholder.svg?height=40&width=40",
+      rating: 4.8,
+      experience: "12 years",
+      education: "Johns Hopkins University",
+      status: "Busy",
+      nextAvailable: "Tomorrow, 10:00 AM",
+      languages: ["English", "Mandarin"],
+      specializations: ["Skin Cancer", "Cosmetic Dermatology", "Pediatric Dermatology"],
+    },
+  ]
 
-  const [privacy, setPrivacy] = useState({
-    shareDataWithDoctors: true,
-    shareDataForResearch: false,
-    allowDataExport: true,
-  })
+  const specialties = [
+    "Cardiology",
+    "Dermatology",
+    "Endocrinology",
+    "Gastroenterology",
+    "Neurology",
+    "Oncology",
+    "Orthopedics",
+    "Pediatrics",
+    "Psychiatry",
+    "Radiology",
+  ]
 
-  const [isLoading, setIsLoading] = useState(false)
-  const [successMessage, setSuccessMessage] = useState("")
+  const timeSlots = ["09:00 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:00 PM"]
 
-  const handleInputChange = (field: string, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  const handleSave = () => {
+    onUpdateUser(editedUser)
+    setIsEditing(false)
   }
 
-  const handleCheckboxChange = (field: string, value: boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  const handleContactDoctor = () => {
+    // Handle contact logic here
+    console.log("Contacting doctor:", selectedDoctor?.name, {
+      message: contactMessage,
+      priority: contactPriority,
+    })
+    setShowContactDialog(false)
+    setContactMessage("")
+    setContactPriority("normal")
   }
 
-  const handleNotificationChange = (field: string, value: boolean) => {
-    setNotifications((prev) => ({ ...prev, [field]: value }))
+  const handleScheduleAppointment = () => {
+    // Handle scheduling logic here
+    console.log("Scheduling appointment with:", selectedDoctor?.name, {
+      date: appointmentDate,
+      time: appointmentTime,
+      type: appointmentType,
+    })
+    setShowScheduleDialog(false)
+    setAppointmentDate(undefined)
+    setAppointmentTime("")
+    setAppointmentType("consultation")
   }
 
-  const handlePrivacyChange = (field: string, value: boolean) => {
-    setPrivacy((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleSave = async () => {
-    setIsLoading(true)
-    setSuccessMessage("")
-
-    // Simulate API call
-    setTimeout(() => {
-      const updatedUser = {
-        ...user,
-        ...formData,
-        notifications,
-        privacy,
-      }
-      onUpdateUser(updatedUser)
-      setSuccessMessage("Profile updated successfully!")
-      setIsLoading(false)
-      setTimeout(() => setSuccessMessage(""), 3000)
-    }, 1000)
-  }
-
-  const calculateAge = (dateOfBirth: string) => {
-    if (!dateOfBirth) return "N/A"
-    const today = new Date()
-    const birthDate = new Date(dateOfBirth)
-    let age = today.getFullYear() - birthDate.getFullYear()
-    const monthDiff = today.getMonth() - birthDate.getMonth()
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--
-    }
-    return age
+  const handleRequestNewDoctor = () => {
+    // Handle new doctor request logic here
+    console.log("Requesting new doctor:", {
+      specialty: requestSpecialty,
+      reason: requestReason,
+      urgency: requestUrgency,
+    })
+    setShowRequestDialog(false)
+    setRequestSpecialty("")
+    setRequestReason("")
+    setRequestUrgency("routine")
   }
 
   return (
-    <div className="flex-1 space-y-6 p-6">
-      {/* Header */}
+    <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">User Information</h1>
-          <p className="text-gray-600">Manage your personal and medical information for predictive health analysis</p>
-        </div>
-        <Button
-          onClick={handleSave}
-          disabled={isLoading}
-          className="bg-slate-800 hover:bg-slate-700 flex items-center space-x-2"
-        >
-          <Save className="h-4 w-4" />
-          <span>{isLoading ? "Saving..." : "Save Changes"}</span>
-        </Button>
+        <h1 className="text-3xl font-bold text-gray-900">User Information</h1>
       </div>
 
-      {successMessage && (
-        <Alert className="bg-slate-50 border-slate-200">
-          <CheckCircle className="h-4 w-4 text-slate-600" />
-          <AlertDescription className="text-slate-800">{successMessage}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Profile Overview Card */}
-      <Card className="focus-within:ring-slate-500">
-        <CardHeader>
-          <CardTitle>Profile Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-6">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={`Profile picture of ${user?.name}`} />
-              <AvatarFallback className="text-lg" aria-label={`Initials for ${user?.name}`}>
-                {user?.name
-                  ?.split(" ")
-                  .map((n: string) => n[0])
-                  .join("")}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-gray-900">{formData.name}</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4 text-gray-500" aria-hidden="true" />
-                  <span className="text-sm text-gray-700 font-medium">
-                    Age: <span className="font-semibold">{formData.age || calculateAge(formData.dateOfBirth)}</span>
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <User className="h-4 w-4 text-gray-500" aria-hidden="true" />
-                  <span className="text-sm text-gray-700 font-medium">
-                    {formData.gender_M ? "Male" : formData.gender_F ? "Female" : "Not specified"}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Activity className="h-4 w-4 text-gray-500" aria-hidden="true" />
-                  <span className="text-sm text-gray-700 font-medium">
-                    BMI: <span className="font-semibold">{formData.bmi || "N/A"}</span>
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Phone className="h-4 w-4 text-gray-500" aria-hidden="true" />
-                  <span className="text-sm text-gray-700 font-medium">{formData.phone || "Not provided"}</span>
-                </div>
-              </div>
-            </div>
-            <Button variant="outline" className="flex items-center space-x-2 bg-transparent">
-              <Camera className="h-4 w-4" />
-              <span>Change Photo</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Tabs defaultValue="demographics" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="demographics">Demographics</TabsTrigger>
-          <TabsTrigger value="vitals">Vitals & Labs</TabsTrigger>
-          <TabsTrigger value="lifestyle">Lifestyle</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="privacy">Privacy</TabsTrigger>
+      <Tabs defaultValue="personal" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="personal">Personal Information</TabsTrigger>
+          <TabsTrigger value="medical">Medical History</TabsTrigger>
+          <TabsTrigger value="doctors">My Doctors</TabsTrigger>
         </TabsList>
 
-        {/* Demographics Tab */}
-        <TabsContent value="demographics" className="space-y-6">
+        <TabsContent value="personal" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <User className="h-5 w-5" />
-                <span>Demographics</span>
-              </CardTitle>
-              <CardDescription>Basic demographic information for health analysis</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Personal Details</CardTitle>
+                <CardDescription>Manage your personal information</CardDescription>
+              </div>
+              <Button
+                variant={isEditing ? "default" : "outline"}
+                onClick={isEditing ? handleSave : () => setIsEditing(true)}
+              >
+                {isEditing ? <Save className="h-4 w-4 mr-2" /> : <Edit className="h-4 w-4 mr-2" />}
+                {isEditing ? "Save" : "Edit"}
+              </Button>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                  <AvatarFallback className="text-lg">
+                    {user.name
+                      ?.split(" ")
+                      .map((n: string) => n[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+                {isEditing && (
+                  <Button variant="outline" size="sm">
+                    Change Photo
+                  </Button>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    placeholder="Enter your full name"
-                  />
+                  {isEditing ? (
+                    <Input
+                      id="name"
+                      value={editedUser.name}
+                      onChange={(e) => setEditedUser({ ...editedUser, name: e.target.value })}
+                    />
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <User className="h-4 w-4 text-gray-500" />
+                      <span>{user.name}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    placeholder="Enter your email"
-                  />
+                  <Label htmlFor="email">Email</Label>
+                  {isEditing ? (
+                    <Input
+                      id="email"
+                      type="email"
+                      value={editedUser.email}
+                      onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
+                    />
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Mail className="h-4 w-4 text-gray-500" />
+                      <span>{user.email}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="age">Age</Label>
-                  <Input
-                    id="age"
-                    type="number"
-                    value={formData.age}
-                    onChange={(e) => handleInputChange("age", e.target.value)}
-                    placeholder="Enter your age"
-                  />
+                  <Label htmlFor="phone">Phone</Label>
+                  {isEditing ? (
+                    <Input
+                      id="phone"
+                      value={editedUser.phone || ""}
+                      onChange={(e) => setEditedUser({ ...editedUser, phone: e.target.value })}
+                    />
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Phone className="h-4 w-4 text-gray-500" />
+                      <span>{user.phone || "Not provided"}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                  <Input
-                    id="dateOfBirth"
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Gender */}
-              <div className="space-y-3">
-                <Label>Gender</Label>
-                <div className="flex space-x-6">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="gender_M"
-                      checked={formData.gender_M}
-                      onCheckedChange={(checked) => {
-                        handleCheckboxChange("gender_M", checked as boolean)
-                        if (checked) handleCheckboxChange("gender_F", false)
-                      }}
+                  {isEditing ? (
+                    <Input
+                      id="dateOfBirth"
+                      type="date"
+                      value={editedUser.dateOfBirth || ""}
+                      onChange={(e) => setEditedUser({ ...editedUser, dateOfBirth: e.target.value })}
                     />
-                    <Label htmlFor="gender_M">Male</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="gender_F"
-                      checked={formData.gender_F}
-                      onCheckedChange={(checked) => {
-                        handleCheckboxChange("gender_F", checked as boolean)
-                        if (checked) handleCheckboxChange("gender_M", false)
-                      }}
-                    />
-                    <Label htmlFor="gender_F">Female</Label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Race */}
-              <div className="space-y-3">
-                <Label>Race</Label>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="race_asian"
-                      checked={formData.race_asian}
-                      onCheckedChange={(checked) => handleCheckboxChange("race_asian", checked as boolean)}
-                    />
-                    <Label htmlFor="race_asian">Asian</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="race_black"
-                      checked={formData.race_black}
-                      onCheckedChange={(checked) => handleCheckboxChange("race_black", checked as boolean)}
-                    />
-                    <Label htmlFor="race_black">Black</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="race_white"
-                      checked={formData.race_white}
-                      onCheckedChange={(checked) => handleCheckboxChange("race_white", checked as boolean)}
-                    />
-                    <Label htmlFor="race_white">White</Label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Ethnicity */}
-              <div className="space-y-3">
-                <Label>Ethnicity</Label>
-                <div className="flex space-x-6">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="ethnicity_hispanic"
-                      checked={formData.ethnicity_hispanic}
-                      onCheckedChange={(checked) => {
-                        handleCheckboxChange("ethnicity_hispanic", checked as boolean)
-                        if (checked) handleCheckboxChange("ethnicity_nonhispanic", false)
-                      }}
-                    />
-                    <Label htmlFor="ethnicity_hispanic">Hispanic</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="ethnicity_nonhispanic"
-                      checked={formData.ethnicity_nonhispanic}
-                      onCheckedChange={(checked) => {
-                        handleCheckboxChange("ethnicity_nonhispanic", checked as boolean)
-                        if (checked) handleCheckboxChange("ethnicity_hispanic", false)
-                      }}
-                    />
-                    <Label htmlFor="ethnicity_nonhispanic">Non-Hispanic</Label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    placeholder="Enter your phone number"
-                  />
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <CalendarIcon className="h-4 w-4 text-gray-500" />
+                      <span>{user.dateOfBirth || "Not provided"}</span>
+                    </div>
+                  )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="bloodType">Blood Type</Label>
-                  <Input
-                    id="bloodType"
-                    value={formData.bloodType}
-                    onChange={(e) => handleInputChange("bloodType", e.target.value)}
-                    placeholder="e.g., O+, A-, B+"
-                  />
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="address">Address</Label>
+                  {isEditing ? (
+                    <Textarea
+                      id="address"
+                      value={editedUser.address || ""}
+                      onChange={(e) => setEditedUser({ ...editedUser, address: e.target.value })}
+                    />
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="h-4 w-4 text-gray-500" />
+                      <span>{user.address || "Not provided"}</span>
+                    </div>
+                  )}
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Textarea
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => handleInputChange("address", e.target.value)}
-                  placeholder="Enter your full address"
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="emergencyContact">Emergency Contact</Label>
-                <Input
-                  id="emergencyContact"
-                  value={formData.emergencyContact}
-                  onChange={(e) => handleInputChange("emergencyContact", e.target.value)}
-                  placeholder="Name and phone number"
-                />
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Vitals & Labs Tab */}
-        <TabsContent value="vitals" className="space-y-6">
+        <TabsContent value="medical" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Heart className="h-5 w-5" />
-                <span>Vitals & Clinical Measurements</span>
-              </CardTitle>
-              <CardDescription>Current vital signs and laboratory results</CardDescription>
+              <CardTitle>Medical History</CardTitle>
+              <CardDescription>Your medical information and history</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Vital Signs */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Vital Signs</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="systolic_bp">Systolic BP (mmHg)</Label>
-                    <Input
-                      id="systolic_bp"
-                      type="number"
-                      value={formData.systolic_bp}
-                      onChange={(e) => handleInputChange("systolic_bp", e.target.value)}
-                      placeholder="120"
-                    />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Allergies</h3>
+                  <div className="flex flex-wrap gap-2">
+                  <span className="text-gray-500">No known allergies</span>
                   </div>
+                </div>
 
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Current Medications</h3>
                   <div className="space-y-2">
-                    <Label htmlFor="diastolic_bp">Diastolic BP (mmHg)</Label>
-                    <Input
-                      id="diastolic_bp"
-                      type="number"
-                      value={formData.diastolic_bp}
-                      onChange={(e) => handleInputChange("diastolic_bp", e.target.value)}
-                      placeholder="80"
-                    />
+                    {Array.isArray(user.medications) && user.medications.length > 0 ? (
+                      user.medications.map((medication: any, index: number) => (
+                        <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                          <span>{medication.name}</span>
+                          <Badge variant="outline">{medication.dosage}</Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-gray-500">No current medications</span>
+                    )}
                   </div>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="heart_rate">Heart Rate (BPM)</Label>
-                    <Input
-                      id="heart_rate"
-                      type="number"
-                      value={formData.heart_rate}
-                      onChange={(e) => handleInputChange("heart_rate", e.target.value)}
-                      placeholder="72"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="respiratory_rate">Respiratory Rate (breaths/min)</Label>
-                    <Input
-                      id="respiratory_rate"
-                      type="number"
-                      value={formData.respiratory_rate}
-                      onChange={(e) => handleInputChange("respiratory_rate", e.target.value)}
-                      placeholder="16"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="pain_severity">Pain Severity (0-10)</Label>
-                    <Input
-                      id="pain_severity"
-                      type="number"
-                      min="0"
-                      max="10"
-                      value={formData.pain_severity}
-                      onChange={(e) => handleInputChange("pain_severity", e.target.value)}
-                      placeholder="0"
-                    />
+                <div className="space-y-4 md:col-span-2">
+                  <h3 className="font-semibold">Medical Conditions</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {user.conditions?.map((condition: string, index: number) => (
+                      <Badge key={index} variant="secondary">
+                        {condition}
+                      </Badge>
+                    )) || <span className="text-gray-500">No known conditions</span>}
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              {/* Lab Results */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Laboratory Results</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bmi">BMI</Label>
-                    <Input
-                      id="bmi"
-                      type="number"
-                      step="0.1"
-                      value={formData.bmi}
-                      onChange={(e) => handleInputChange("bmi", e.target.value)}
-                      placeholder="23.5"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="glucose">Glucose (mg/dL)</Label>
-                    <Input
-                      id="glucose"
-                      type="number"
-                      step="0.1"
-                      value={formData.glucose}
-                      onChange={(e) => handleInputChange("glucose", e.target.value)}
-                      placeholder="95"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="creatinine">Creatinine (mg/dL)</Label>
-                    <Input
-                      id="creatinine"
-                      type="number"
-                      step="0.01"
-                      value={formData.creatinine}
-                      onChange={(e) => handleInputChange("creatinine", e.target.value)}
-                      placeholder="1.0"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="urea_nitrogen">Urea Nitrogen (mg/dL)</Label>
-                    <Input
-                      id="urea_nitrogen"
-                      type="number"
-                      step="0.1"
-                      value={formData.urea_nitrogen}
-                      onChange={(e) => handleInputChange("urea_nitrogen", e.target.value)}
-                      placeholder="15"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="sodium">Sodium (mEq/L)</Label>
-                    <Input
-                      id="sodium"
-                      type="number"
-                      step="0.1"
-                      value={formData.sodium}
-                      onChange={(e) => handleInputChange("sodium", e.target.value)}
-                      placeholder="140"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="potassium">Potassium (mEq/L)</Label>
-                    <Input
-                      id="potassium"
-                      type="number"
-                      step="0.1"
-                      value={formData.potassium}
-                      onChange={(e) => handleInputChange("potassium", e.target.value)}
-                      placeholder="4.0"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="chloride">Chloride (mEq/L)</Label>
-                    <Input
-                      id="chloride"
-                      type="number"
-                      step="0.1"
-                      value={formData.chloride}
-                      onChange={(e) => handleInputChange("chloride", e.target.value)}
-                      placeholder="100"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="calcium">Calcium (mg/dL)</Label>
-                    <Input
-                      id="calcium"
-                      type="number"
-                      step="0.1"
-                      value={formData.calcium}
-                      onChange={(e) => handleInputChange("calcium", e.target.value)}
-                      placeholder="10.0"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="carbon_dioxide">Carbon Dioxide (mEq/L)</Label>
-                    <Input
-                      id="carbon_dioxide"
-                      type="number"
-                      step="0.1"
-                      value={formData.carbon_dioxide}
-                      onChange={(e) => handleInputChange("carbon_dioxide", e.target.value)}
-                      placeholder="24"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Treatment-related */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Treatment Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="medication_count">Number of Medications</Label>
-                    <Input
-                      id="medication_count"
-                      type="number"
-                      value={formData.medication_count}
-                      onChange={(e) => handleInputChange("medication_count", e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Medical History */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Medical History</h3>
+        <TabsContent value="doctors" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">My Doctors</h2>
+              <p className="text-gray-600">Healthcare providers assigned to your care</p>
+            </div>
+            <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Request New Doctor
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Request New Doctor</DialogTitle>
+                  <DialogDescription>Submit a request to be assigned to a new healthcare provider</DialogDescription>
+                </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="allergies">Allergies</Label>
-                    <Textarea
-                      id="allergies"
-                      value={formData.allergies}
-                      onChange={(e) => handleInputChange("allergies", e.target.value)}
-                      placeholder="List any allergies (medications, food, environmental, etc.)"
-                      rows={3}
-                    />
+                    <Label htmlFor="specialty">Specialty</Label>
+                    <Select value={requestSpecialty} onValueChange={setRequestSpecialty}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select specialty" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {specialties.map((specialty) => (
+                          <SelectItem key={specialty} value={specialty}>
+                            {specialty}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="medications">Current Medications</Label>
-                    <Textarea
-                      id="medications"
-                      value={formData.medications}
-                      onChange={(e) => handleInputChange("medications", e.target.value)}
-                      placeholder="List current medications with dosages"
-                      rows={4}
-                    />
+                    <Label htmlFor="urgency">Urgency</Label>
+                    <Select value={requestUrgency} onValueChange={setRequestUrgency}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="routine">Routine</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                        <SelectItem value="emergency">Emergency</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="medicalConditions">Medical Conditions</Label>
+                    <Label htmlFor="reason">Reason for Request</Label>
                     <Textarea
-                      id="medicalConditions"
-                      value={formData.medicalConditions}
-                      onChange={(e) => handleInputChange("medicalConditions", e.target.value)}
-                      placeholder="List any chronic conditions or medical history"
-                      rows={4}
+                      id="reason"
+                      placeholder="Please describe your medical needs..."
+                      value={requestReason}
+                      onChange={(e) => setRequestReason(e.target.value)}
                     />
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Lifestyle Tab */}
-        <TabsContent value="lifestyle" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Activity className="h-5 w-5" />
-                <span>Lifestyle Factors</span>
-              </CardTitle>
-              <CardDescription>Lifestyle information for health risk assessment</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Tobacco Smoking Status */}
-              <div className="space-y-3">
-                <Label>Tobacco Smoking Status</Label>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="tobacco_current"
-                      checked={formData.tobacco_smoking_status_Current_every_day_smoker}
-                      onCheckedChange={(checked) => {
-                        handleCheckboxChange("tobacco_smoking_status_Current_every_day_smoker", checked as boolean)
-                        if (checked) {
-                          handleCheckboxChange("tobacco_smoking_status_Former_smoker", false)
-                          handleCheckboxChange("tobacco_smoking_status_Never_smoker", false)
-                        }
-                      }}
-                    />
-                    <Label htmlFor="tobacco_current">Current every day smoker</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="tobacco_former"
-                      checked={formData.tobacco_smoking_status_Former_smoker}
-                      onCheckedChange={(checked) => {
-                        handleCheckboxChange("tobacco_smoking_status_Former_smoker", checked as boolean)
-                        if (checked) {
-                          handleCheckboxChange("tobacco_smoking_status_Current_every_day_smoker", false)
-                          handleCheckboxChange("tobacco_smoking_status_Never_smoker", false)
-                        }
-                      }}
-                    />
-                    <Label htmlFor="tobacco_former">Former smoker</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="tobacco_never"
-                      checked={formData.tobacco_smoking_status_Never_smoker}
-                      onCheckedChange={(checked) => {
-                        handleCheckboxChange("tobacco_smoking_status_Never_smoker", checked as boolean)
-                        if (checked) {
-                          handleCheckboxChange("tobacco_smoking_status_Current_every_day_smoker", false)
-                          handleCheckboxChange("tobacco_smoking_status_Former_smoker", false)
-                        }
-                      }}
-                    />
-                    <Label htmlFor="tobacco_never">Never smoker</Label>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Notifications Tab */}
-        <TabsContent value="notifications" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Bell className="h-5 w-5" />
-                <span>Notification Preferences</span>
-              </CardTitle>
-              <CardDescription>Choose how you want to receive notifications</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Email Notifications</h4>
-                    <p className="text-sm text-gray-600">Receive updates via email</p>
-                  </div>
-                  <Button
-                    variant={notifications.emailNotifications ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleNotificationChange("emailNotifications", !notifications.emailNotifications)}
-                  >
-                    {notifications.emailNotifications ? "On" : "Off"}
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowRequestDialog(false)}>
+                    Cancel
                   </Button>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">SMS Notifications</h4>
-                    <p className="text-sm text-gray-600">Receive text message alerts</p>
-                  </div>
-                  <Button
-                    variant={notifications.smsNotifications ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleNotificationChange("smsNotifications", !notifications.smsNotifications)}
-                  >
-                    {notifications.smsNotifications ? "On" : "Off"}
+                  <Button onClick={handleRequestNewDoctor}>
+                    <Send className="h-4 w-4 mr-2" />
+                    Submit Request
                   </Button>
-                </div>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Appointment Reminders</h4>
-                    <p className="text-sm text-gray-600">Get reminded about upcoming appointments</p>
+          <div className="grid gap-6">
+            {assignedDoctors.map((doctor) => (
+              <Card key={doctor.id} className="overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-4">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={doctor.avatar || "/placeholder.svg"} alt={doctor.name} />
+                        <AvatarFallback>
+                          {doctor.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="space-y-2">
+                        <div>
+                          <h3 className="text-xl font-semibold">{doctor.name}</h3>
+                          <p className="text-gray-600">{doctor.specialty}</p>
+                        </div>
+                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                          <div className="flex items-center space-x-1">
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <span>{doctor.rating}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <GraduationCap className="h-4 w-4" />
+                            <span>{doctor.experience}</span>
+                          </div>
+                          <Badge variant={doctor.status === "Available" ? "default" : "secondary"}>
+                            {doctor.status}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex items-center space-x-2">
+                            <Stethoscope className="h-4 w-4 text-gray-400" />
+                            <span>{doctor.hospital}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Clock className="h-4 w-4 text-gray-400" />
+                            <span>Next available: {doctor.nextAvailable}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col space-y-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            View Profile
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle className="flex items-center space-x-3">
+                              <Avatar className="h-12 w-12">
+                                <AvatarImage src={doctor.avatar || "/placeholder.svg"} alt={doctor.name} />
+                                <AvatarFallback>
+                                  {doctor.name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <h3 className="text-xl font-semibold">{doctor.name}</h3>
+                                <p className="text-gray-600">{doctor.specialty}</p>
+                              </div>
+                            </DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <h4 className="font-semibold flex items-center space-x-2">
+                                  <Award className="h-4 w-4" />
+                                  <span>Education</span>
+                                </h4>
+                                <p className="text-sm text-gray-600">{doctor.education}</p>
+                              </div>
+                              <div className="space-y-2">
+                                <h4 className="font-semibold flex items-center space-x-2">
+                                  <Star className="h-4 w-4" />
+                                  <span>Experience</span>
+                                </h4>
+                                <p className="text-sm text-gray-600">{doctor.experience}</p>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <h4 className="font-semibold">Specializations</h4>
+                              <div className="flex flex-wrap gap-2">
+                                {doctor.specializations.map((spec, index) => (
+                                  <Badge key={index} variant="secondary">
+                                    {spec}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <h4 className="font-semibold">Languages</h4>
+                              <div className="flex flex-wrap gap-2">
+                                {doctor.languages.map((lang, index) => (
+                                  <Badge key={index} variant="outline">
+                                    {lang}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <h4 className="font-semibold">Contact Information</h4>
+                              <div className="space-y-1 text-sm">
+                                <div className="flex items-center space-x-2">
+                                  <Phone className="h-4 w-4 text-gray-400" />
+                                  <span>{doctor.phone}</span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Mail className="h-4 w-4 text-gray-400" />
+                                  <span>{doctor.email}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setSelectedDoctor(doctor)
+                          setShowContactDialog(true)
+                        }}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Contact
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedDoctor(doctor)
+                          setShowScheduleDialog(true)
+                        }}
+                      >
+                        <CalendarIcon className="h-4 w-4 mr-2" />
+                        Schedule
+                      </Button>
+                    </div>
                   </div>
-                  <Button
-                    variant={notifications.appointmentReminders ? "default" : "outline"}
-                    size="sm"
-                    onClick={() =>
-                      handleNotificationChange("appointmentReminders", !notifications.appointmentReminders)
-                    }
-                  >
-                    {notifications.appointmentReminders ? "On" : "Off"}
-                  </Button>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Medication Reminders</h4>
-                    <p className="text-sm text-gray-600">Never miss your medication schedule</p>
-                  </div>
-                  <Button
-                    variant={notifications.medicationReminders ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleNotificationChange("medicationReminders", !notifications.medicationReminders)}
-                  >
-                    {notifications.medicationReminders ? "On" : "Off"}
-                  </Button>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Health Tips</h4>
-                    <p className="text-sm text-gray-600">Receive personalized health recommendations</p>
-                  </div>
-                  <Button
-                    variant={notifications.healthTips ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleNotificationChange("healthTips", !notifications.healthTips)}
-                  >
-                    {notifications.healthTips ? "On" : "Off"}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Privacy Tab */}
-        <TabsContent value="privacy" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Shield className="h-5 w-5" />
-                <span>Privacy Settings</span>
-              </CardTitle>
-              <CardDescription>Control how your data is used and shared</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Share Data with Healthcare Providers</h4>
-                    <p className="text-sm text-gray-600">Allow your doctors to access your health records</p>
-                  </div>
-                  <Button
-                    variant={privacy.shareDataWithDoctors ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handlePrivacyChange("shareDataWithDoctors", !privacy.shareDataWithDoctors)}
-                  >
-                    {privacy.shareDataWithDoctors ? "Enabled" : "Disabled"}
-                  </Button>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Contribute to Medical Research</h4>
-                    <p className="text-sm text-gray-600">Help improve healthcare through anonymized data</p>
-                  </div>
-                  <Button
-                    variant={privacy.shareDataForResearch ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handlePrivacyChange("shareDataForResearch", !privacy.shareDataForResearch)}
-                  >
-                    {privacy.shareDataForResearch ? "Enabled" : "Disabled"}
-                  </Button>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Allow Data Export</h4>
-                    <p className="text-sm text-gray-600">Enable downloading your complete health records</p>
-                  </div>
-                  <Button
-                    variant={privacy.allowDataExport ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handlePrivacyChange("allowDataExport", !privacy.allowDataExport)}
-                  >
-                    {privacy.allowDataExport ? "Enabled" : "Disabled"}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
+
+      {/* Contact Doctor Dialog */}
+      <Dialog open={showContactDialog} onOpenChange={setShowContactDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Contact {selectedDoctor?.name}</DialogTitle>
+            <DialogDescription>Send a secure message to your healthcare provider</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select value={contactPriority} onValueChange={setContactPriority}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="message">Message</Label>
+              <Textarea
+                id="message"
+                placeholder="Type your message here..."
+                value={contactMessage}
+                onChange={(e) => setContactMessage(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowContactDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleContactDoctor}>
+              <Send className="h-4 w-4 mr-2" />
+              Send Message
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Schedule Appointment Dialog */}
+      <Dialog open={showScheduleDialog} onOpenChange={setShowScheduleDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Schedule Appointment</DialogTitle>
+            <DialogDescription>Book an appointment with {selectedDoctor?.name}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Select Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !appointmentDate && "text-muted-foreground",
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {appointmentDate ? format(appointmentDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar mode="single" selected={appointmentDate} onSelect={setAppointmentDate} initialFocus />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="time">Time</Label>
+              <Select value={appointmentTime} onValueChange={setAppointmentTime}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeSlots.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="type">Appointment Type</Label>
+              <Select value={appointmentType} onValueChange={setAppointmentType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="consultation">Consultation</SelectItem>
+                  <SelectItem value="follow-up">Follow-up</SelectItem>
+                  <SelectItem value="check-up">Check-up</SelectItem>
+                  <SelectItem value="emergency">Emergency</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowScheduleDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleScheduleAppointment}>
+              <CalendarIcon className="h-4 w-4 mr-2" />
+              Schedule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
