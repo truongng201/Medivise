@@ -32,7 +32,7 @@ jobs:
         run: echo "Folder backend in services has not changed"
 
   build_and_push:
-    name: Build and Push customer Service Docker Image
+    name: Build and Push Backend Service Docker Image
     runs-on: ubuntu-latest
     needs: [check_folder_changed]
     if: needs.check_folder_changed.outputs.is_changed == 'true'
@@ -48,8 +48,8 @@ jobs:
 
       - name: Build Docker image
         run: |
-          cd services/customer/
-          docker build --build-arg --build-arg APP_VERSION=${{ github.sha }} --build-arg ENV=production -t ${{ secrets.DOCKERHUB_USERNAME}}/${{ secrets.DOCKERHUB_REPOSITORY}}-bacend:latest -f Dockerfile .
+          cd backend/
+          docker build --build-arg APP_VERSION=${{ github.sha }} --build-arg ENV=production -t ${{ secrets.DOCKERHUB_USERNAME}}/${{ secrets.DOCKERHUB_REPOSITORY}}-backend:latest -f Dockerfile .
 
       - name: Push Docker image to Docker Hub
         run: docker push ${{ secrets.DOCKERHUB_USERNAME}}/${{ secrets.DOCKERHUB_REPOSITORY}}-backend:latest
