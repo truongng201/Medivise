@@ -13,7 +13,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./data/postgres_data:/var/lib/postgresql/data
 
   minio:
     image: quay.io/minio/minio:latest
@@ -27,7 +27,18 @@ services:
       - "9000:9000"  # S3 API
       - "9001:9001"  # MinIO Console
     volumes:
-      - minio_data:/data
+      - ./data/minio_data:/data
+  
+  cache:
+    image: redis:7.2-alpine
+    container_name: cache
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis_data:/data
+    command: >
+      sh -c "redis-server --appendonly yes --requirepass redispassword"
 
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.0.1
@@ -44,7 +55,7 @@ services:
       AWS_SECRET_ACCESS_KEY: minio123
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
     volumes:
-      - mlflow_data:/mlflow  # store SQLite file
+      - ./data/mlflow_data:/mlflow  # store SQLite file
     command: >
       mlflow server 
       --backend-store-uri sqlite:///mlflow/mlflow.db
@@ -70,14 +81,9 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
-    environment:
-      DATABASE_URL: postgresql://medivise:medivise@postgres:5432/medivisedb
-      AWS_ACCESS_KEY_ID: minio
-      AWS_SECRET_ACCESS_KEY: minio123
-      AWS_ENDPOINT_URL: http://minio:9000
-      MLFLOW_TRACKING_URI: http://mlflow:5000
+    env_file:
+      - .env
+      
 
 volumes:
   postgres_data:
-  minio_data:
-  mlflow_data:

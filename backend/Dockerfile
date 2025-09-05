@@ -38,6 +38,7 @@ ARG SERVICE_NAME \
 ENV SERVICE_NAME=${SERVICE_NAME}
 ENV APP_VERSION=${APP_VERSION}
 ENV ENV=${ENV}
+ENV PYTHONPATH=/usr/src/app
 
 ## set working directory
 WORKDIR /usr/src/app
