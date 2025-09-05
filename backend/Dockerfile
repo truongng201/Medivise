@@ -32,10 +32,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=compile-image /opt/venv /opt/venv
 
 ## SET ARGUMENTS TO ENVIRONMENT VARIABLES
-ARG SERVICE_NAME \
-    APP_VERSION \
+ARG APP_VERSION \
     ENV
-ENV SERVICE_NAME=${SERVICE_NAME}
 ENV APP_VERSION=${APP_VERSION}
 ENV ENV=${ENV}
 ENV PYTHONPATH=/usr/src/app

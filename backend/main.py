@@ -8,14 +8,13 @@ from utils import standard_response, StandardResponse, CustomException, Database
 from fastapi.middleware.cors import CORSMiddleware
 
 ENV = os.getenv("ENV", "development")
-SERVICE_NAME = os.getenv("SERVICE_NAME", "service")
 APP_VERSION = os.getenv("APP_VERSION", "version") if ENV == "production" else ENV
 API_VERSION = os.getenv("API_VERSION", "v1")
 
-app = FastAPI(title=SERVICE_NAME, version=APP_VERSION, root_path=f"/{API_VERSION}/{SERVICE_NAME}")
+app = FastAPI(title="Mediverse Backend", version=APP_VERSION, root_path=f"/{API_VERSION}")
 
 # Register routes
-app.include_router(router, tags=[f"{SERVICE_NAME}"])
+app.include_router(router, tags=["Mediverse Backend"])
 
 origins = ["*"] if ENV == "development" else os.getenv("CORS_ORIGINS", "").split(",")
 
@@ -36,7 +35,7 @@ def health_check():
     db.close_pool()
     # Check cache connection
     Cache()
-    return f"{SERVICE_NAME} service is running with version {APP_VERSION}"
+    return f"Mediverse Backend service is running with version {APP_VERSION} and api version {API_VERSION}"
 
 @app.exception_handler(CustomException)
 async def http_exception_handler(request: Request, exc: CustomException):

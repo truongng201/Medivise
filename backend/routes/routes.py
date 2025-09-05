@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter
+from utils import standard_response, login_required
 
 router = APIRouter()
 
 @router.get("/example")
-def example_endpoint(param: str = Query(..., description="An example query parameter")):
-    return {"message": f"Received parameter: {param}"}
+@standard_response
+def example_endpoint():
+    return "Example endpoint response aa"
