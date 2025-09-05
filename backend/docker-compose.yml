@@ -4,7 +4,7 @@ name: medivise-backend
 services:
   postgres:
     image: postgres:17.6
-    container_name: mlflow_postgres
+    container_name: postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: medivise
@@ -17,7 +17,7 @@ services:
 
   minio:
     image: quay.io/minio/minio:latest
-    container_name: mlflow_minio
+    container_name: minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:

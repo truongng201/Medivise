@@ -1,0 +1,102 @@
+version: "3.9"
+
+services:
+  postgres: 
+    image: postgres:17.6
+    environment:
+      POSTGRES_USER: medivise
+      POSTGRES_DB: medivisedb
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    volumes:
+      - /mnt/data/postgres-data:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    networks:
+      - shared_net
+    secrets:
+      - postgres_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medivise"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  cache:
+    image: redis:7.2-alpine
+    command: ["sh", "-c", "redis-server --appendonly yes --requirepass \"$$(cat /run/secrets/cache_password)\""]
+    volumes:
+      - /mnt/data/cache-data:/data
+    networks:
+      - shared_net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+        reservations:
+          cpus: "0.10"
+          memory: 128M
+    secrets:
+      - cache_password
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-07-18T21-56-31Z
+    environment:
+      MINIO_ROOT_USER_FILE: /run/secrets/minio_user
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_password
+    command: server /data --console-address ":9001"
+    volumes:
+      - /mnt/data/minio-data:/data
+    networks:
+      - shared_net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    secrets:
+      - minio_user
+      - minio_password
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  shared_net:
+    external: true
+
+secrets:
+  postgres_password:
+    external: true
+  cache_password:
+    external: true
+  minio_user:
+    external: true
+  minio_password:
+    external: true

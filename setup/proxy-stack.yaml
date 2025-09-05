@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  proxy-manager:
+    image: jc21/nginx-proxy-manager:2.12.6
+    restart: unless-stopped
+    ports:
+      - "80:80"      # HTTP
+      - "443:443"    # HTTPS
+      - "81:81"      # NPM Web UI
+    volumes:
+      - /mnt/proxy-manager/data:/data
+      - /mnt/proxy-manager/letsencrypt:/etc/letsencrypt
+    environment:
+      - TZ=Asia/Ho_Chi_Minh  # Set your timezone (Adjust as needed)
+      - DISABLE_IPV6=true    # Disable IPv6 if not needed
+    networks:
+      - shared_net
+networks:
+  shared_net:
+    external: true

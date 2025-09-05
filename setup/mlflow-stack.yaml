@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.0.1
+    environment:
+      MLFLOW_DEFAULT_ARTIFACT_ROOT: s3://mlflow/
+      AWS_ACCESS_KEY_ID: /run/secrets/minio_user
+      AWS_SECRET_ACCESS_KEY: /run/secrets/minio_password
+      MLFLOW_S3_ENDPOINT_URL: http://database_minio:9000
+    volumes:
+      - /mnt/data/mlflow-data:/mlflow  # store SQLite file
+    command: >
+      mlflow server 
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root s3://mlflow/
+      --host 0.0.0.0
+      --port 5000
+    networks:
+      - shared_net
+    secrets:
+      - minio_user
+      - minio_password
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    
+
+secrets:
+  minio_user:
+    external: true
+  minio_password:
+    external: true
+
+networks:
+  shared_net:
+    external: true
