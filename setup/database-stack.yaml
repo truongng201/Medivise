@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_USER: medivise
       POSTGRES_DB: medivisedb
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_PASSWORD: /run/secrets/postgres_password
     volumes:
       - /mnt/data/postgres-data:/var/lib/postgresql/data
     deploy:
@@ -27,14 +27,17 @@ services:
     secrets:
       - postgres_password
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U medivise"]
+      test: ["CMD-SHELL", "pg_isready -U medivisedb"]
       interval: 30s
       timeout: 10s
       retries: 5
 
   cache:
     image: redis:7.2-alpine
-    command: ["sh", "-c", "redis-server --appendonly yes --requirepass \"$$(cat /run/secrets/cache_password)\""]
+    environment:
+      REDIS_PASSWORD: /run/secrets/cache_password
+    command: >
+      sh -c "redis-server --appendonly yes --requirepass $$REDIS_PASSWORD"
     volumes:
       - /mnt/data/cache-data:/data
     networks:
@@ -47,11 +50,11 @@ services:
         window: 120s
       resources:
         limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
           cpus: "0.25"
           memory: 256M
-        reservations:
-          cpus: "0.10"
-          memory: 128M
     secrets:
       - cache_password
 

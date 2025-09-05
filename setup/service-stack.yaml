@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  backend:
+    image: nemo0122003/medivise-backend:latest
+    restart: unless-stopped
+    environment:
+      REDIS_HOST: database_cache
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      REDIS_PASSWORD: /run/secrets/cache_password
+      JWT_ALGORITHM: HS256
+      JWT_SECRET_KEY: /run/secrets/jwt_secret_key
+      POSTGRES_HOST: database_postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: medivisedb
+      POSTGRES_USER: medivise
+      POSTGRES_PASSWORD: /run/secrets/postgres_password
+      MINIO_ENDPOINT: database_minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: /run/secrets/minio_user
+      MINIO_SECRET_KEY: /run/secrets/minio_password
+    networks:
+      - shared_net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1G
+        reservations:
+          cpus: "0.50"
+          memory: 512M
+    secrets:
+      - cache_password
+      - jwt_secret_key
+      - postgres_password
+      - minio_user
+      - minio_password
+
+secrets:
+  cache_password:
+    external: true
+  jwt_secret_key:
+    external: true
+  postgres_password:
+    external: true
+  minio_user:
+    external: true
+  minio_password:
+    external: true 
+      
+networks:
+  shared_net:
+    external: true

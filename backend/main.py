@@ -36,7 +36,7 @@ def health_check():
     db.close_pool()
     # Check cache connection
     Cache()
-    return f"Mediverse Backend service is running with version {APP_VERSION} and api version {API_VERSION}"
+    return f"Mediverse Backend Service is running with version {APP_VERSION[:7]}"
 
 @app.exception_handler(CustomException)
 async def http_exception_handler(request: Request, exc: CustomException):

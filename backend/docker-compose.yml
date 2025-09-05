@@ -37,8 +37,10 @@ services:
       - "6379:6379"
     volumes:
       - ./data/redis_data:/data
+    environment:
+      REDIS_PASSWORD: redispassword
     command: >
-      sh -c "redis-server --appendonly yes --requirepass redispassword"
+      sh -c "redis-server --appendonly yes --requirepass $$REDIS_PASSWORD"
 
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.0.1
