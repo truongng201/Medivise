@@ -11,7 +11,7 @@ ENV = os.getenv("ENV", "development")
 APP_VERSION = os.getenv("APP_VERSION", "version") if ENV == "production" else ENV
 API_VERSION = os.getenv("API_VERSION", "v1")
 
-app = FastAPI(title="Mediverse Backend", version=APP_VERSION)
+app = FastAPI(title="Mediverse Backend", version=APP_VERSION[:7])
 
 # Register routes
 app.include_router(api_router, tags=["Mediverse Backend Service"], prefix=f"/api/{API_VERSION}")

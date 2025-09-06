@@ -58,4 +58,4 @@ ENV PYTHONUNBUFFERED=1
 ENV PATH="/opt/venv/bin:$PATH"
 
 ## run app
-CMD ["uvicorn", "main:app", "--port", "8000", "--host", "0.0.0.0", "--reload"]
+CMD ["uvicorn", "main:app", "--port", "8000", "--host", "0.0.0.0"]
