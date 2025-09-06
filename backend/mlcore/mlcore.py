@@ -59,6 +59,9 @@ class MLCore:
             "model_status": model_version.status,
         }
         
+    def get_model(self):
+        return self.model
+        
     
     def get_model_metadata(self):
         return self.model_metadata
@@ -92,7 +95,7 @@ class MLCore:
         self._set_model_metadata()
         
         
-    def preprocess_for_inference(df: pd.DataFrame, feature_columns: List[str]) -> pd.DataFrame:
+    def preprocess_for_inference(self, df: pd.DataFrame, feature_columns: List[str]) -> pd.DataFrame:
         """
         EXACT same steps as train/evaluate:
         - get_dummies (no drop_first)
@@ -108,7 +111,3 @@ class MLCore:
         X = X.reindex(columns=feature_columns, fill_value=0.0)
         X = X.fillna(0.0)
         return X
-        
-
-    def get_prediction(self):
-        pass

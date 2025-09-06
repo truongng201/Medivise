@@ -36,7 +36,6 @@ yarn-error.log*
 next-env.d.ts
 
 # mlops
-*.csv
 *.pkl
 mlartifacts/
 __pycache__/

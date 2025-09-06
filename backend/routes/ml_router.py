@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 
-from controller import InitializeModelController, GetModelMetadataController, TrainModelController
+from controller import InitializeModelController, GetModelMetadataController, PredictController
 from utils import standard_response
+from models import PredictPayload
 
 ml_router = APIRouter()
 ml_core = None
@@ -23,20 +24,7 @@ def initialize_model():
 
 @ml_router.post("/predict")
 @standard_response
-def predict():
-    return "This endpoint will return predictions results once implemented"
-
-
-@ml_router.post("/train_model")
-@standard_response
-def train_model():
-    controller = TrainModelController(ml_core)
-    controller.execute()
-    return "Tra"
-
-
-@ml_router.post("/evaluate_model")
-@standard_response
-def evaluate_model():
-    return "This endpoint will trigger model evaluation once implemented"
-
+def predict(request_payload: PredictPayload):
+    controller = PredictController(request_payload, ml_core)
+    response = controller.execute()
+    return response

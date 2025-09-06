@@ -1,3 +1,3 @@
 from .GetModelMetadataController import GetModelMetadataController
 from .InitializeModelController import InitializeModelController
-from .TrainModelController import TrainModelController
+from .PredictController import PredictController
