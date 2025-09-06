@@ -4,10 +4,8 @@ services:
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.0.1
     environment:
-      MLFLOW_DEFAULT_ARTIFACT_ROOT: s3://mlflow/
       AWS_ACCESS_KEY_ID: /run/secrets/minio_user
       AWS_SECRET_ACCESS_KEY: /run/secrets/minio_password
-      MLFLOW_S3_ENDPOINT_URL: http://database_minio:9000
     volumes:
       - /mnt/data/mlflow-data:/mlflow  # store SQLite file
     command: >

@@ -6,7 +6,7 @@ import mlflow
 import mlflow.xgboost
 from tempfile import TemporaryDirectory
 
-from config import configure_experiment, logger
+from config import configure_experiment
 from models import train_xgb_classifier_high_recall
 from mlflow.models.signature import infer_signature
 
@@ -28,15 +28,15 @@ def _make_sample_X(df_train: pd.DataFrame, feature_columns: list[str]) -> pd.Dat
 def train():
     # Ensure experiment is set (uses default from config unless overridden)
     exp = configure_experiment()
-    logger.info(f"Using MLflow experiment: {exp}")
+    print(f"Using MLflow experiment: {exp}")
 
-    logger.info("Loading training data...")
+    print("Loading training data...")
     df_train = pd.read_csv(TRAIN_FILE)
 
-    logger.info("Training XGBoost model...")
+    print("Training XGBoost model...")
     best_model, le, metrics, (_y_test, _y_pred), feature_columns = \
         train_xgb_classifier_high_recall(df_train)
-    logger.info("Training complete.")
+    print("Training complete.")
 
     # Prepare sample for MLflow signature
     sample_X_full = _make_sample_X(df_train, feature_columns)
@@ -74,10 +74,10 @@ def train():
             best_model.get_booster().save_model(booster_json_path)
             mlflow.log_artifact(booster_json_path, artifact_path="artifacts")
 
-        logger.info(f"Model logged to MLflow (run_id={run.info.run_id})")
-        logger.info("Metrics:")
+        print(f"Model logged to MLflow (run_id={run.info.run_id})")
+        print("Metrics:")
         for k, v in metrics.items():
-            logger.info(f"{k}: {v}")
+            print(f"{k}: {v}")
 
 if __name__ == "__main__":
     app()

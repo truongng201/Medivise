@@ -5,6 +5,11 @@ services:
     image: nemo0122003/medivise-backend:latest
     restart: unless-stopped
     environment:
+      MLFLOW_TRACKING_URI: http://ml_mlflow:5000
+      AWS_ACCESS_KEY_ID: /run/secrets/minio_user
+      AWS_SECRET_ACCESS_KEY: /run/secrets/minio_password
+      MLFLOW_S3_ENDPOINT_URL: http://database_minio:9000
+      S3_USE_PATH_STYLE_ENDPOINT: "true"
       REDIS_HOST: database_cache
       REDIS_PORT: 6379
       REDIS_DB: 0
