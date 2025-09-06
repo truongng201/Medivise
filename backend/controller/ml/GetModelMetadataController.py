@@ -5,6 +5,8 @@ class GetModelMetadataController:
     def __init__(self, ml_core: MLCore):
         self.response = None
         self.ml_core = ml_core
+        if not self.ml_core:
+            raise BadRequestException("MLCore instance is not initialized.")
         
     def _mapping_response(self):
         model_metadata = self.ml_core.get_model_metadata()

@@ -7,7 +7,7 @@ import mlflow.xgboost
 from tempfile import TemporaryDirectory
 
 from config import configure_experiment, logger
-from models import train_xgb_classifier_high_recall
+from backend.mlcore.test_code.models import train_xgb_classifier_high_recall
 from mlflow.models.signature import infer_signature
 
 TRAIN_FILE = "mlops/data/processed/train_patient_features.csv"

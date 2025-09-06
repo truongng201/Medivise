@@ -2,11 +2,11 @@ import os
 import mlflow
 import json
 import numpy as np
+import pandas as pd
+from typing import List
 from sklearn.preprocessing import LabelEncoder
 
 from utils import BadRequestException
-
-from utils import logger
 
 class MLCore:
     def __init__(self):
@@ -90,3 +90,25 @@ class MLCore:
     def load_model(self):
         self.model = mlflow.xgboost.load_model(self.model_uri)
         self._set_model_metadata()
+        
+        
+    def preprocess_for_inference(df: pd.DataFrame, feature_columns: List[str]) -> pd.DataFrame:
+        """
+        EXACT same steps as train/evaluate:
+        - get_dummies (no drop_first)
+        - numeric coercion
+        - cast all numeric to float64
+        - reindex to feature_columns with fill_value=0.0
+        - final fillna(0.0)
+        """
+        X = pd.get_dummies(df, drop_first=False)
+        X = X.apply(pd.to_numeric, errors="coerce")
+        num_cols = X.select_dtypes(include=["number"]).columns
+        X[num_cols] = X[num_cols].astype("float64")
+        X = X.reindex(columns=feature_columns, fill_value=0.0)
+        X = X.fillna(0.0)
+        return X
+        
+
+    def get_prediction(self):
+        pass

@@ -14,7 +14,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from config import configure_experiment, logger
-from predict import _load_model_and_artifacts, _preprocess_for_inference
+from backend.mlcore.test_code.predict import _load_model_and_artifacts, _preprocess_for_inference
 
 class FeatureRecord(BaseModel):
     gender: str
