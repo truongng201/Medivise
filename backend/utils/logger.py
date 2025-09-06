@@ -20,23 +20,14 @@ LOGGING_CONFIG = {
         }
     },
     "loggers": {
-        "uvicorn": {
-            "handlers": ["default"],
-            "level": "INFO",
-            "propagate": False,
-        },
-        "uvicorn.error": {
-            "level": "INFO",
-        },
-        "uvicorn.access": {
-            "handlers": ["default"],
-            "level": "INFO",
-            "propagate": False,
-        },
-        "root": {
-            "handlers": ["default"],
-            "level": "DEBUG"
-        }
+        "uvicorn": {"handlers": ["default"], "level": "INFO", "propagate": False},
+        "uvicorn.error": {"level": "INFO"},
+        "uvicorn.access": {"handlers": ["default"], "level": "INFO", "propagate": False},
+        "mlflow": {"handlers": ["default"], "level": "INFO", "propagate": False},
+        "boto3": {"handlers": ["default"], "level": "WARNING", "propagate": False},
+        "botocore": {"handlers": ["default"], "level": "WARNING", "propagate": False},
+        "s3transfer": {"handlers": ["default"], "level": "WARNING", "propagate": False},
+        "root": {"handlers": ["default"], "level": "INFO"},
     },
 }
 

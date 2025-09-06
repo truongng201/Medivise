@@ -10,7 +10,7 @@ from config import configure_experiment, logger
 from models import train_xgb_classifier_high_recall
 from mlflow.models.signature import infer_signature
 
-TRAIN_FILE = "mlops/data/processed/train_patient_features.csv"
+TRAIN_FILE = "../mldata/processed/train_patient_features.csv"
 
 app = typer.Typer()
 

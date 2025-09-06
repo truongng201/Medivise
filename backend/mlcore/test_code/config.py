@@ -13,7 +13,7 @@ LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---------- MLflow ----------
 # You’re running an MLflow server locally on port 5000
-MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5001")
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 # Default experiment name (can be overridden with env var)
