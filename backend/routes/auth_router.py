@@ -43,10 +43,11 @@ def logout(payload: LogoutModel, request: Request, account_info=Depends(login_re
     response = controller.execute()
     return response
 
-@auth_router.post("/change_password")
+@auth_router.get("/get_new_access_token")
 @standard_response
-def change_password(payload: ChangePasswordModel, account_info=Depends(login_required)):
-    controller = ChangePasswordController(payload, account_info)
+def get_new_access_token(refresh_token: str, request: Request, account_info=Depends(login_required)):
+    accesst_token = request.headers.get("Authorization")
+    controller = GetNewAccessTokenController(refresh_token, account_info, accesst_token)
     response = controller.execute()
     return response
 
@@ -54,12 +55,5 @@ def change_password(payload: ChangePasswordModel, account_info=Depends(login_req
 @standard_response
 def reset_password(payload: ResetPasswordModel):
     controller = ResetPasswordController(payload)
-    response = controller.execute()
-    return response
-
-@auth_router.get("/get_new_access_token")
-@standard_response
-def get_new_access_token(account_info=Depends(login_required)):
-    controller = GetNewAccessTokenController(account_info)
     response = controller.execute()
     return response

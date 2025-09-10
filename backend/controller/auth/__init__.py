@@ -1,4 +1,3 @@
-from .ChangePasswordController import ChangePasswordController
 from .CreateDoctorAccountController import CreateDoctorAccountController
 from .CreatePatientAccountController import CreatePatientAccountController
 from .GetNewAccessTokenController import GetNewAccessTokenController
