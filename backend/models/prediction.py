@@ -1,6 +1,5 @@
 from typing import Literal, Optional, List
 from pydantic import BaseModel, Field
-from enum import Enum
 
 class FeatureRecord(BaseModel):
     gender: Literal["F", "M"]
