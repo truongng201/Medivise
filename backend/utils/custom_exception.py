@@ -35,3 +35,8 @@ class TokenExpiredException(CustomException):
     def __init__(self, message: str):
         super().__init__(message)
         self.status_code = 401
+        
+class ServerErrorException(CustomException):
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.status_code = 500

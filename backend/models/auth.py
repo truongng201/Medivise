@@ -14,7 +14,7 @@ class LoginModel(BaseModel):
 
 class CreatePatientAccountModel(BaseModel):
     email: str = Field(..., example="patient@example.com")
-    password: str = Field(..., example="securepassword")
+    password: str = Field(..., example="Securepassword123")
     fullname: str = Field(..., example="John Doe")
     phone_number: str = Field(..., example="+1234567890")
     date_of_birth: str = Field(..., example="30-12-1990")  # Format: DD-MM-YYYY
@@ -23,7 +23,7 @@ class CreatePatientAccountModel(BaseModel):
         schema_extra = {
             "example": {
                 "email": "patient@example.com",
-                "password": "securepassword",
+                "password": "Securepassword123",
                 "fullname": "John Doe",
                 "phone_number": "+1234567890",
                 "date_of_birth": "30-12-1990"
