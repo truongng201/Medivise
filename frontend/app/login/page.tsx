@@ -6,12 +6,19 @@ import { useRouter } from "next/navigation"
 export default function Login() {
   const router = useRouter()
 
-  const handleLogin = (userData: any) => {
-    // Store user data in localStorage or context
-    localStorage.setItem('user', JSON.stringify(userData))
-    
+  const handleLogin = () => {
+    const authDataStr = localStorage.getItem("authData")
+    if (!authDataStr) {
+      router.push("/login")
+      return
+    }
+    const authData = JSON.parse(authDataStr) as { 
+      account: { role: string, profile_picture_url: string, email: string, account_id: number },
+      accessToken: string,
+      refreshToken: string
+    }
     // Redirect based on user type
-    if (userData.userType === "doctor") {
+    if (authData?.account.role === "doctor") {
       router.push("/doctor")
     } else {
       router.push("/patient")

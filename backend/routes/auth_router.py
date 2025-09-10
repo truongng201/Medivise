@@ -44,9 +44,9 @@ def logout(payload: LogoutModel, request: Request, account_info=Depends(login_re
 
 @auth_router.get("/get_new_access_token")
 @standard_response
-def get_new_access_token(refresh_token: str, request: Request, account_info=Depends(login_required)):
-    accesst_token = request.headers.get("Authorization")
-    controller = GetNewAccessTokenController(refresh_token, account_info, accesst_token)
+def get_new_access_token(refresh_token: str, role: str, request: Request):
+    access_token = request.headers.get("Authorization")
+    controller = GetNewAccessTokenController(refresh_token, access_token, role)
     response = controller.execute()
     return response
 

@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Eye, EyeOff, Mail, Lock, User, Stethoscope } from "lucide-react"
 
 interface LoginPageProps {
-  onLogin: (userData: any) => void
+  onLogin: () => void
   onSwitchToSignup: () => void
   onSwitchToDoctorSignup: () => void
 }
@@ -63,15 +63,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onSwitchToDoctorS
         
         // Store the response payload in localStorage
         localStorage.setItem('authData', JSON.stringify(responseData?.data))
-        
-        // Create user data object for the app state
-        const userData = {
-          ...responseData,
-          userType: userType,
-          email: formData.email,
-        }
-        
-        onLogin(userData)
+        onLogin()
       } else {
         const errorData = await response.json()
         setError(errorData.message || "Invalid email or password. Please try again.")
