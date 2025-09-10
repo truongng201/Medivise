@@ -41,7 +41,7 @@ export function DoctorSidebar({ user, activeTab, onTabChange, onLogout, selected
             <Stethoscope className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">HealthRecord</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Medivise</h2>
             <p className="text-xs text-gray-500">Doctor Portal</p>
           </div>
         </div>

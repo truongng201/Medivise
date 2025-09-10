@@ -12,13 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Eye, EyeOff, Mail, Lock, User, Phone, Stethoscope, Building, GraduationCap } from "lucide-react"
 
 interface DoctorSignupPageProps {
-  onSignup: (userData: any) => void
   onSwitchToLogin: () => void
   onSwitchToPatientSignup: () => void
 }
 
 export default function DoctorSignupPage({
-  onSignup,
   onSwitchToLogin,
   onSwitchToPatientSignup,
 }: DoctorSignupPageProps) {
@@ -92,35 +90,7 @@ export default function DoctorSignupPage({
 
     // Simulate API call
     setTimeout(() => {
-      const userData = {
-        id: Math.floor(Math.random() * 1000) + 100,
-        userType: "doctor",
-        name: formData.name,
-        email: formData.email,
-        avatar: "/placeholder.svg",
-        phone: formData.phone || "+1 (555) 987-6543",
-        specialty: formData.specialty,
-        licenseNumber: formData.licenseNumber,
-        hospital: formData.hospital || "General Hospital",
-        department: formData.specialty,
-        experience: formData.experience || "5 years",
-        education: formData.education || "Medical School",
-        bio: `Experienced ${formData.specialty.toLowerCase()} dedicated to providing excellent patient care.`,
-        consultationFee: "$150",
-        availableHours: "Mon-Fri 9AM-5PM",
-        languages: "English",
-        patients: [
-          {
-            id: 1,
-            name: "John Doe",
-            age: 34,
-            lastVisit: "2024-01-10",
-            condition: "Hypertension",
-            status: "stable",
-          },
-        ],
-      }
-      onSignup(userData)
+      
       setIsLoading(false)
     }, 1000)
   }

@@ -38,7 +38,7 @@ export function AppSidebar({ user, activeTab, onTabChange, onLogout }: AppSideba
       <SidebarHeader>
         <div className="flex items-center space-x-3 p-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">HealthRecord</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Medivise</h2>
             <p className="text-xs text-gray-500">Personal Health Management</p>
           </div>
         </div>
