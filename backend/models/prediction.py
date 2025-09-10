@@ -1,12 +1,14 @@
-from typing import Optional, List
+from typing import Literal, Optional, List
 from pydantic import BaseModel, Field
-
+from enum import Enum
 
 class FeatureRecord(BaseModel):
-    gender: str
-    race: str
-    ethnicity: str
-    tobacco_smoking_status: str
+    gender: Literal["F", "M"]
+    race: Literal["asian", "black", "white"]
+    ethnicity: Literal["hispanic", "nonhispanic"]
+    tobacco_smoking_status: Literal[
+        "Current every day smoker", "Never smoker", "Former smoker"
+    ]
     pain_severity: Optional[float] = None
     age: Optional[float] = None
     bmi: Optional[float] = None
