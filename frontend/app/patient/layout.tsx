@@ -1,44 +1,52 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "../components/app-sidebar"
-import { Spinner } from "@/components/ui/spinner"
+import { useRequireAuth, useAuthContext } from "@/contexts/auth-context"
+import { AuthManager } from "@/lib/auth"
 
 export default function PatientLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [user, setUser] = useState<any>(null)
   const router = useRouter()
   const pathname = usePathname()
+  const { authData, isAuthenticated, isLoading } = useRequireAuth('patient')
+  const { logout } = useAuthContext()
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user')
-    if (!userData) {
-      router.push('/login')
-      return
+  const handleLogout = async () => {
+    try {
+      // Optionally call backend logout endpoint
+      if (authData) {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `${authData.access_token}`
+          },
+          body: JSON.stringify({
+            refresh_token: authData.refresh_token
+          })
+        })
+      }
+    } catch (error) {
+      console.error('Error during logout:', error)
+    } finally {
+      // Always clear local storage and redirect
+      logout()
     }
-
-    const parsedUser = JSON.parse(userData)
-    if (parsedUser.userType !== 'patient') {
-      router.push('/login')
-      return
-    }
-
-    setUser(parsedUser)
-  }, [router])
-
-  const handleLogout = () => {
-    localStorage.removeItem('user')
-    router.push('/login')
   }
 
   const handleUpdateUser = (updatedUser: any) => {
-    setUser(updatedUser)
-    localStorage.setItem('user', JSON.stringify(updatedUser))
+    if (authData) {
+      const updatedAuthData = {
+        ...authData,
+        account: { ...authData.account, ...updatedUser }
+      }
+      AuthManager.setAuthData(updatedAuthData)
+    }
   }
 
   const getActiveTab = () => {
@@ -63,22 +71,26 @@ export default function PatientLayout({
     router.push(routes[tab as keyof typeof routes] || '/patient')
   }
 
-  if (!user) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center space-y-4">
-          <Spinner size="lg" className="text-slate-600" />
-          <p className="text-slate-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     )
+  }
+
+  if (!isAuthenticated || !authData) {
+    return null // useAuth will handle redirect
   }
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar
-          user={user}
+          user={authData.account}
           activeTab={getActiveTab()}
           onTabChange={handleTabChange}
           onLogout={handleLogout}

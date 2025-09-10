@@ -117,7 +117,7 @@ export default function DoctorSignupPage({
         setError(errorData.message || "Failed to create account. Please try again.")
       }
     } catch (error) {
-      setError("Network error. Please check your connection and try again.")
+      console.error('Error during signup:', error)
     } finally {
       setIsLoading(false)
     }

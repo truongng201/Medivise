@@ -1,35 +1,65 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRequireAuth } from "@/contexts/auth-context"
+import { AuthManager } from "@/lib/auth"
 
 import Dashboard from "../components/dashboard"
 
 export default function PatientDashboard() {
-  const [user, setUser] = useState<any>(null)
-  const router = useRouter()
+  const [patientInfo, setPatientInfo] = useState<any>(null)
+  const [isLoadingInfo, setIsLoadingInfo] = useState(true)
+  const [error, setError] = useState("")
+  const { authData, isAuthenticated, isLoading } = useRequireAuth('patient')
 
   useEffect(() => {
-    const authDataStr = localStorage.getItem('authData')
-    if(!authDataStr){
-      router.push('/login')
-      return
-    }
-    const authData = JSON.parse(authDataStr) as { 
-      account: { role: string, profile_picture_url: string, email: string, account_id: number },
-      accessToken: string,
-      refreshToken: string
-    }
-    if(authData?.account.role !== 'patient'){
-      router.push('/login')
-      return
-    }
-    setUser(authDataStr)
-  }, [])
+    const fetchPatientInfo = async () => {
+      if (!isAuthenticated || !authData) return
 
-  if (!user) {
-    return <div>Loading...</div>
+      try {
+        setIsLoadingInfo(true)
+        const info = await AuthManager.getPatientInfo()
+        setPatientInfo(info)
+        setError("")
+      } catch (error) {
+        console.error('Error fetching patient info:', error)
+        setError("Failed to load patient information")
+      } finally {
+        setIsLoadingInfo(false)
+      }
+    }
+
+    if (isAuthenticated) {
+      fetchPatientInfo()
+    }
+  }, [isAuthenticated, authData])
+
+  if (isLoading || isLoadingInfo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
-  return <Dashboard user={user} />
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return <Dashboard user={patientInfo || authData} />
 }

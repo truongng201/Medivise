@@ -91,7 +91,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onSwitchToDoctor
         setError(errorData.message || "Failed to create account. Please try again.")
       }
     } catch (error) {
-      setError("Network error. Please check your connection and try again.")
+      console.error('Error during signup:', error)
     } finally {
       setIsLoading(false)
     }

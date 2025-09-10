@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useAuthContext } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,6 +27,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onSwitchToDoctorS
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [userType, setUserType] = useState<"patient" | "doctor">("patient")
+  const { login } = useAuthContext()
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -61,15 +63,26 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onSwitchToDoctorS
       if (response.ok) {
         const responseData = await response.json()
         
-        // Store the response payload in localStorage
-        localStorage.setItem('authData', JSON.stringify(responseData?.data))
-        onLogin()
+        // Store the response payload using AuthManager
+        if (responseData?.data) {
+          const authData = responseData.data
+          // Ensure the auth data has the expected structure
+          if (authData.account && authData.access_token && authData.refresh_token) {
+            // Use the auth context to set auth data
+            login(authData)
+            
+            // Call onLogin callback
+            onLogin()
+          } else {
+            setError("Invalid response format from server. Please try again.")
+          }
+        }
       } else {
         const errorData = await response.json()
         setError(errorData.message || "Invalid email or password. Please try again.")
       }
     } catch (error) {
-      setError("Network error. Please check your connection and try again.")
+      console.error('Error during login:', error)
     } finally {
       setIsLoading(false)
     }

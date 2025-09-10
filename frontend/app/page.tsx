@@ -2,32 +2,34 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Spinner } from "@/components/ui/spinner"
+import { useAuthContext } from "@/contexts/auth-context"
 
 export default function Home() {
   const router = useRouter()
+  const { authData, isAuthenticated, isLoading } = useAuthContext()
 
   useEffect(() => {
-    // Check if user is already logged in
-    const userData = localStorage.getItem('user')
-    if (userData) {
-      const user = JSON.parse(userData)
-      if (user.userType === 'doctor') {
-        router.push('/doctor')
+    if (!isLoading) {
+      
+      if (isAuthenticated && authData) {
+        if (authData.account?.role === 'doctor') {
+          router.push('/doctor')
+        } else if (authData.account?.role === 'patient') {
+          router.push('/patient')
+        } else {
+          router.push('/login')
+        }
       } else {
-        router.push('/patient')
+        router.push('/login')
       }
-    } else {
-      // Redirect to login if no user data
-      router.push('/login')
     }
-  }, [router])
+  }, [isLoading, isAuthenticated, authData, router])
 
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="flex flex-col items-center space-y-4">
-        <Spinner size="lg" className="text-slate-600" />
-        <p className="text-slate-600">Loading...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p className="text-gray-600">Loading...</p>
       </div>
     </div>
   )

@@ -120,10 +120,6 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
 
   const handleContactDoctor = () => {
     // Handle contact logic here
-    console.log("Contacting doctor:", selectedDoctor?.name, {
-      message: contactMessage,
-      priority: contactPriority,
-    })
     setShowContactDialog(false)
     setContactMessage("")
     setContactPriority("normal")
@@ -131,11 +127,7 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
 
   const handleScheduleAppointment = () => {
     // Handle scheduling logic here
-    console.log("Scheduling appointment with:", selectedDoctor?.name, {
-      date: appointmentDate,
-      time: appointmentTime,
-      type: appointmentType,
-    })
+    
     setShowScheduleDialog(false)
     setAppointmentDate(undefined)
     setAppointmentTime("")
@@ -144,11 +136,6 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
 
   const handleRequestNewDoctor = () => {
     // Handle new doctor request logic here
-    console.log("Requesting new doctor:", {
-      specialty: requestSpecialty,
-      reason: requestReason,
-      urgency: requestUrgency,
-    })
     setShowRequestDialog(false)
     setRequestSpecialty("")
     setRequestReason("")

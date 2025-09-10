@@ -78,7 +78,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onSwitchToDoctorS
         setError(errorData.message || "Invalid email or password. Please try again.")
       }
     } catch (error) {
-      setError("Network error. Please check your connection and try again.")
+      console.error('Error during login:', error)
     } finally {
       setIsLoading(false)
     }
