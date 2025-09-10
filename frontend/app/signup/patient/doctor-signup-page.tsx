@@ -96,21 +96,21 @@ export default function DoctorSignupPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-2">
+      <div className="w-full max-w-4xl space-y-4">
         {/* Header */}
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-2">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Doctor Registration</h1>
-            <p className="text-gray-600 mt-2">Join our platform as a healthcare provider</p>
+            <h1 className="text-2xl font-bold text-gray-900">Doctor Registration</h1>
+            <p className="text-gray-600 text-sm">Join our platform as a healthcare provider</p>
           </div>
         </div>
 
         {/* Signup Form */}
         <Card>
-          <CardHeader>
-            <CardTitle>Healthcare Provider Registration</CardTitle>
-            <CardDescription>Fill in your professional details to create your doctor account</CardDescription>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">Healthcare Provider Registration</CardTitle>
+            <CardDescription className="text-sm">Fill in your professional details to create your doctor account</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -120,198 +120,215 @@ export default function DoctorSignupPage({
                 </Alert>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name *</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              {/* Row 1: Basic Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="name" className="text-sm font-medium">Full Name *</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      placeholder="Dr. John Smith"
+                      className="pl-10 h-9"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="email" className="text-sm font-medium">Email Address *</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      placeholder="doctor@hospital.com"
+                      className="pl-10 h-9"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 2: Contact & Specialty */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange("phone", e.target.value)}
+                      placeholder="+1 (555) 123-4567"
+                      className="pl-10 h-9"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="specialty" className="text-sm font-medium">Medical Specialty *</Label>
+                  <div className="relative">
+                    <Stethoscope className="absolute left-3 top-2.5 h-4 w-4 text-gray-400 z-10" />
+                    <Select value={formData.specialty} onValueChange={(value) => handleInputChange("specialty", value)}>
+                      <SelectTrigger className="pl-10 h-9">
+                        <SelectValue placeholder="Select your specialty" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {specialties.map((specialty) => (
+                          <SelectItem key={specialty} value={specialty}>
+                            {specialty}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 3: Professional Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="licenseNumber" className="text-sm font-medium">Medical License Number *</Label>
+                  <div className="relative">
+                    <GraduationCap className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="licenseNumber"
+                      type="text"
+                      value={formData.licenseNumber}
+                      onChange={(e) => handleInputChange("licenseNumber", e.target.value)}
+                      placeholder="MD123456"
+                      className="pl-10 h-9"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="hospital" className="text-sm font-medium">Hospital/Clinic</Label>
+                  <div className="relative">
+                    <Building className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="hospital"
+                      type="text"
+                      value={formData.hospital}
+                      onChange={(e) => handleInputChange("hospital", e.target.value)}
+                      placeholder="City General Hospital"
+                      className="pl-10 h-9"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 4: Experience & Education */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="experience" className="text-sm font-medium">Years of Experience</Label>
                   <Input
-                    id="name"
+                    id="experience"
                     type="text"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    placeholder="Dr. John Smith"
-                    className="pl-10"
-                    required
+                    value={formData.experience}
+                    onChange={(e) => handleInputChange("experience", e.target.value)}
+                    placeholder="5 years"
+                    className="h-9"
                   />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address *</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <div className="space-y-1">
+                  <Label htmlFor="education" className="text-sm font-medium">Medical Education</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    placeholder="doctor@hospital.com"
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    placeholder="+1 (555) 123-4567"
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="specialty">Medical Specialty *</Label>
-                <div className="relative">
-                  <Stethoscope className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
-                  <Select value={formData.specialty} onValueChange={(value) => handleInputChange("specialty", value)}>
-                    <SelectTrigger className="pl-10">
-                      <SelectValue placeholder="Select your specialty" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {specialties.map((specialty) => (
-                        <SelectItem key={specialty} value={specialty}>
-                          {specialty}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="licenseNumber">Medical License Number *</Label>
-                <div className="relative">
-                  <GraduationCap className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="licenseNumber"
+                    id="education"
                     type="text"
-                    value={formData.licenseNumber}
-                    onChange={(e) => handleInputChange("licenseNumber", e.target.value)}
-                    placeholder="MD123456"
-                    className="pl-10"
-                    required
+                    value={formData.education}
+                    onChange={(e) => handleInputChange("education", e.target.value)}
+                    placeholder="Harvard Medical School"
+                    className="h-9"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="hospital">Hospital/Clinic</Label>
-                <div className="relative">
-                  <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="hospital"
-                    type="text"
-                    value={formData.hospital}
-                    onChange={(e) => handleInputChange("hospital", e.target.value)}
-                    placeholder="City General Hospital"
-                    className="pl-10"
-                  />
+              {/* Row 5: Password Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="password" className="text-sm font-medium">Password *</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => handleInputChange("password", e.target.value)}
+                      placeholder="Create a password"
+                      className="pl-10 pr-10 h-9"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password *</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                      placeholder="Confirm your password"
+                      className="pl-10 pr-10 h-9"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="experience">Years of Experience</Label>
-                <Input
-                  id="experience"
-                  type="text"
-                  value={formData.experience}
-                  onChange={(e) => handleInputChange("experience", e.target.value)}
-                  placeholder="5 years"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="education">Medical Education</Label>
-                <Input
-                  id="education"
-                  type="text"
-                  value={formData.education}
-                  onChange={(e) => handleInputChange("education", e.target.value)}
-                  placeholder="Harvard Medical School"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password *</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                    placeholder="Create a password"
-                    className="pl-10 pr-10"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                    placeholder="Confirm your password"
-                    className="pl-10 pr-10"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700 h-10" disabled={isLoading}>
                 {isLoading ? "Creating Account..." : "Create Doctor Account"}
               </Button>
             </form>
 
-            <div className="mt-6 text-center space-y-2">
-              <p className="text-sm text-gray-600">
+            <div className="mt-4 text-center space-y-1">
+              <p className="text-xs text-gray-600">
                 Already have an account?{" "}
                 <button onClick={onSwitchToLogin} className="font-medium text-slate-800 hover:text-slate-700 underline">
                   Sign in
                 </button>
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs text-gray-600">
                 Need a patient account?{" "}
                 <button
                   onClick={onSwitchToPatientSignup}
