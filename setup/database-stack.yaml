@@ -60,6 +60,7 @@ services:
 
   minio:
     image: quay.io/minio/minio:RELEASE.2025-07-18T21-56-31Z
+    hostname: minio
     environment:
       MINIO_ROOT_USER_FILE: /run/secrets/minio_user
       MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_password

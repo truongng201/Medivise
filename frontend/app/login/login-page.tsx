@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useAuthContext } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Eye, EyeOff, Mail, Lock, User, Stethoscope } from "lucide-react"
 
 interface LoginPageProps {
-  onLogin: (userData: any) => void
+  onLogin: () => void
   onSwitchToSignup: () => void
   onSwitchToDoctorSignup: () => void
 }
@@ -26,6 +27,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onSwitchToDoctorS
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [userType, setUserType] = useState<"patient" | "doctor">("patient")
+  const { login } = useAuthContext()
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -44,112 +46,46 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onSwitchToDoctorS
       return
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      if (userType === "patient") {
-        // Mock patient login
-        const userData = {
-          id: 1,
-          userType: "patient",
-          name: "John Doe",
+    try {
+      // Call login API
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           email: formData.email,
-          avatar: "/placeholder.svg",
-          phone: "+1 (555) 123-4567",
-          dateOfBirth: "1990-05-15",
-          assignedDoctors: [
-            { id: 1, name: "Dr. Sarah Johnson", specialty: "Cardiologist" },
-            { id: 2, name: "Dr. Michael Chen", specialty: "General Practice" },
-          ],
-          // Demographics
-          age: 34,
-          gender_F: false,
-          gender_M: true,
-          race_asian: false,
-          race_black: false,
-          race_white: true,
-          ethnicity_hispanic: false,
-          ethnicity_nonhispanic: true,
-          // Lifestyle
-          tobacco_smoking_status_Current_every_day_smoker: false,
-          tobacco_smoking_status_Former_smoker: true,
-          tobacco_smoking_status_Never_smoker: false,
-          // Vitals & Clinical Measurements
-          systolic_bp: 120,
-          diastolic_bp: 80,
-          heart_rate: 72,
-          respiratory_rate: 16,
-          pain_severity: 2,
-          // Lab Results
-          bmi: 23.5,
-          calcium: 10.0,
-          carbon_dioxide: 24,
-          chloride: 100,
-          creatinine: 1.0,
-          glucose: 95,
-          potassium: 4.0,
-          sodium: 140,
-          urea_nitrogen: 15,
-          // Treatment-related
-          medication_count: 2,
-          // Additional fields
-          bloodType: "O+",
-          address: "123 Main St, Anytown, USA 12345",
-          emergencyContact: "Jane Doe - +1 (555) 987-6543",
-          allergies: "Penicillin, Shellfish",
-          medications: "Lisinopril 10mg daily, Metformin 500mg twice daily",
-          medicalConditions: "Hypertension, Type 2 Diabetes",
+          password: formData.password,
+          role: userType,
+        }),
+      })
+
+      if (response.ok) {
+        const responseData = await response.json()
+        
+        // Store the response payload using AuthManager
+        if (responseData?.data) {
+          const authData = responseData.data
+          // Ensure the auth data has the expected structure
+          if (authData.account && authData.access_token && authData.refresh_token) {
+            // Use the auth context to set auth data
+            login(authData)
+            
+            // Call onLogin callback
+            onLogin()
+          } else {
+            setError("Invalid response format from server. Please try again.")
+          }
         }
-        onLogin(userData)
       } else {
-        // Mock doctor login
-        const userData = {
-          id: 101,
-          userType: "doctor",
-          name: "Dr. Sarah Johnson",
-          email: formData.email,
-          avatar: "/placeholder.svg",
-          phone: "+1 (555) 987-6543",
-          specialty: "Cardiologist",
-          licenseNumber: "MD123456",
-          hospital: "City General Hospital",
-          department: "Cardiology",
-          experience: "15 years",
-          education: "Harvard Medical School",
-          bio: "Experienced cardiologist specializing in interventional cardiology and heart disease prevention.",
-          consultationFee: "$200",
-          availableHours: "Mon-Fri 9AM-5PM",
-          languages: "English, Spanish",
-          patients: [
-            {
-              id: 1,
-              name: "John Doe",
-              age: 34,
-              lastVisit: "2024-01-10",
-              condition: "Hypertension",
-              status: "stable",
-            },
-            {
-              id: 2,
-              name: "Jane Smith",
-              age: 28,
-              lastVisit: "2024-01-08",
-              condition: "Arrhythmia",
-              status: "monitoring",
-            },
-            {
-              id: 3,
-              name: "Robert Wilson",
-              age: 45,
-              lastVisit: "2024-01-05",
-              condition: "Heart Disease",
-              status: "critical",
-            },
-          ],
-        }
-        onLogin(userData)
+        const errorData = await response.json()
+        setError(errorData.message || "Invalid email or password. Please try again.")
       }
+    } catch (error) {
+      console.error('Error during login:', error)
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -325,27 +261,6 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onSwitchToDoctorS
             </div>
           </CardContent>
         </Card>
-
-        {/* Demo Credentials */}
-        {/* <Card className="bg-slate-50 border-slate-200">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <p className="text-sm font-medium text-slate-800">Demo Credentials</p>
-              <div className="grid grid-cols-2 gap-4 text-xs text-slate-600">
-                <div className="space-y-1">
-                  <p className="font-medium">Patient Account:</p>
-                  <p>Email: patient@demo.com</p>
-                  <p>Password: patient123</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium">Doctor Account:</p>
-                  <p>Email: doctor@demo.com</p>
-                  <p>Password: doctor123</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card> */}
       </div>
     </div>
   )

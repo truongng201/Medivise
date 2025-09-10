@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from routes import ml_router, api_router
+from routes import *
 from utils import standard_response, StandardResponse, CustomException, Database, Cache
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -14,10 +14,12 @@ API_VERSION = os.getenv("API_VERSION", "v1")
 app = FastAPI(title="Mediverse Backend", version=APP_VERSION[:7])
 
 # Register routes
-app.include_router(api_router, tags=["Mediverse Backend Service"], prefix=f"/api/{API_VERSION}")
-app.include_router(ml_router, tags=["Mediverse Machine Learning System"], prefix=f"/ml/{API_VERSION}")
+app.include_router(ml_router, tags=["Machine Learning System"], prefix=f"/ml/{API_VERSION}")
+app.include_router(auth_router, tags=["Authentication"], prefix=f"/api/{API_VERSION}/auth")
+app.include_router(patient_router, tags=["Patient Management"], prefix=f"/api/{API_VERSION}/patient")
+app.include_router(doctor_router, tags=["Doctor Management"], prefix=f"/api/{API_VERSION}/doctor")
 
-origins = ["*"] if ENV == "development" else os.getenv("CORS_ORIGINS", "").split(",")
+origins = ["*"] if ENV in ['development', 'dev'] else os.getenv("CORS_ORIGINS", "").split(",")
 
 app.add_middleware(
     CORSMiddleware,

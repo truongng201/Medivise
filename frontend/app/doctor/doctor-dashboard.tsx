@@ -61,7 +61,7 @@ export default function DoctorDashboard({ user }: DoctorDashboardProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome, {user?.name}!</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Welcome, {user?.fullname}!</h1>
           <p className="text-gray-600">
             {user?.specialty} • {user?.hospital}
           </p>

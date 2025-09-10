@@ -41,7 +41,7 @@ export default function PatientList({ user, onSelectPatient }: PatientListProps)
       glucose: 95,
       medications: "Lisinopril 10mg daily",
       allergies: "Penicillin",
-      assignedDoctors: [{ id: user.id, name: user.name, specialty: user.specialty }],
+      assignedDoctors: [{ id: user?.id, name: user?.name, specialty: user?.specialty }],
     },
     {
       id: 2,
@@ -63,7 +63,7 @@ export default function PatientList({ user, onSelectPatient }: PatientListProps)
       glucose: 92,
       medications: "Metoprolol 25mg twice daily",
       allergies: "None known",
-      assignedDoctors: [{ id: user.id, name: user.name, specialty: user.specialty }],
+      assignedDoctors: [{ id: user?.id, name: user?.name, specialty: user?.specialty }],
     },
     {
       id: 3,
@@ -85,7 +85,7 @@ export default function PatientList({ user, onSelectPatient }: PatientListProps)
       glucose: 110,
       medications: "Atorvastatin 40mg, Carvedilol 12.5mg",
       allergies: "Shellfish, Aspirin",
-      assignedDoctors: [{ id: user.id, name: user.name, specialty: user.specialty }],
+      assignedDoctors: [{ id: user?.id, name: user?.name, specialty: user?.specialty }],
     },
     {
       id: 4,
@@ -107,7 +107,7 @@ export default function PatientList({ user, onSelectPatient }: PatientListProps)
       glucose: 145,
       medications: "Metformin 1000mg twice daily",
       allergies: "Sulfa drugs",
-      assignedDoctors: [{ id: user.id, name: user.name, specialty: user.specialty }],
+      assignedDoctors: [{ id: user?.id, name: user?.name, specialty: user?.specialty }],
     },
   ]
 

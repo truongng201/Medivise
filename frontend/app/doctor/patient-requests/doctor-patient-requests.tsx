@@ -134,12 +134,10 @@ export default function DoctorPatientRequests({ user }: DoctorPatientRequestsPro
   }
 
   const handleAcceptRequest = (requestId: number) => {
-    console.log("Accepting request:", requestId)
     // Handle accept logic here
   }
 
   const handleRejectRequest = () => {
-    console.log("Rejecting request:", selectedRequest?.id, "Reason:", rejectReason)
     setShowRejectDialog(false)
     setRejectReason("")
     setSelectedRequest(null)

@@ -167,7 +167,7 @@ export default function Dashboard({ user }: DashboardProps) {
       {/* Welcome Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user?.name}!</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user?.fullname}!</h1>
           <p className="text-gray-600">Here's your health overview for today</p>
         </div>
         <Dialog open={showQuickActionDialog} onOpenChange={setShowQuickActionDialog}>

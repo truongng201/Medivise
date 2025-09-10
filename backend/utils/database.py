@@ -13,6 +13,7 @@ class Database:
             "database": os.getenv("POSTGRES_DB", "test_db"),
             "port": int(os.getenv("POSTGRES_PORT", 5432)),
         }
+        self.connection = None
 
         pool_min = int(os.getenv("POSTGRES_POOL_MIN", 1))
         pool_max = int(os.getenv("POSTGRES_POOL_MAX", 10))
@@ -36,12 +37,11 @@ class Database:
         :param params: Parameters for the query (optional).
         :return: Query result.
         """
-        connection = None
         cursor = None
         try:
-            connection = self.pool.getconn()
-            cursor = connection.cursor()
-            connection.autocommit = False
+            self.connection = self.pool.getconn()
+            cursor = self.connection.cursor()
+            self.connection.autocommit = False
 
             if params:
                 cursor.execute(query, params)
@@ -49,45 +49,44 @@ class Database:
                 cursor.execute(query)
 
             result = cursor.fetchall()
-            connection.commit()
+            self.connection.commit()
             return result
         except Exception as err:
             logger.error(f"Query execution error: {err}")
-            if connection:
-                connection.rollback()
+            if self.connection:
+                self.connection.rollback()
             raise
         finally:
             if cursor:
                 cursor.close()
-            if connection:
-                self.pool.putconn(connection)
+            if self.connection:
+                self.pool.putconn(self.connection)
 
     def execute_non_query(self, query, params=None):
         """
         Execute an INSERT/UPDATE/DELETE query.
         Returns number of affected rows.
         """
-        connection = None
         cursor = None
         try:
-            connection = self.pool.getconn()
-            cursor = connection.cursor()
-            connection.autocommit = False
+            self.connection = self.pool.getconn()
+            cursor = self.connection.cursor()
+            self.connection.autocommit = False
 
             cursor.execute(query, params)
             affected = cursor.rowcount
-            connection.commit()
+            self.connection.commit()
             return affected
         except Exception as err:
             logger.error(f"Non-query execution error: {err}")
-            if connection:
-                connection.rollback()
+            if self.connection:
+                self.connection.rollback()
             raise
         finally:
             if cursor:
                 cursor.close()
-            if connection:
-                self.pool.putconn(connection)
+            if self.connection:
+                self.pool.putconn(self.connection)
 
     def close_pool(self):
         """
@@ -99,4 +98,16 @@ class Database:
                 logger.info("PostgreSQL connection pool closed successfully.")
         except Exception as e:
             logger.error(f"Error closing connection pool: {e}")
+            raise Exception("Something went wrong")
+
+    def rollback(self):
+        """
+        Rollback the current transaction.
+        """
+        try:
+            if self.connection:
+                self.connection.rollback()
+                logger.info("Transaction rolled back successfully.")
+        except Exception as e:
+            logger.error(f"Error during rollback: {e}")
             raise Exception("Something went wrong")
