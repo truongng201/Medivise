@@ -11,9 +11,9 @@ class CreatePatientAccountController:
         self.query = CreatePatientAccountQuery()
         self.query_payload = {}
         self.response = None
-        self.validate_payload()
-        
-    def validate_payload(self):
+        self.__validate_payload()
+
+    def __validate_payload(self):
         fullname = self.payload.fullname.strip() if self.payload.fullname else ""
         email = self.payload.email.strip() if self.payload.email else ""
         password = self.payload.password.strip() if self.payload.password else ""
@@ -26,25 +26,25 @@ class CreatePatientAccountController:
             or not re.search(r"[A-Z]", password) \
             or not re.search(r"[a-z]", password) \
             or not re.search(r"[0-9]", password):
-            self.query.close()
+            self.query.stop_query()
             raise InvalidDataException("Password must be between 6 and 50 characters and contain at least one uppercase letter, one lowercase letter, and one digit")
 
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            self.query.close()
+            self.query.stop_query()
             raise InvalidDataException("Invalid email format")
 
         if not re.match(r"^[a-zA-Z\s]+$", fullname):
-            self.query.close()
+            self.query.stop_query()
             raise InvalidDataException("Full name can only contain letters and spaces")
 
         if phone_number:
             if not re.match(r"^\+?[1-9]\d{1,14}$", phone_number):
-                self.query.close()
+                self.query.stop_query()
                 raise InvalidDataException("Invalid phone number format")
 
         if date_of_birth:
             if not re.match(r"\d{2}-\d{2}-\d{4}", date_of_birth):
-                self.query.close()
+                self.query.stop_query()
                 raise InvalidDataException("Invalid date of birth format. Expected format: DD-MM-YYYY")
             
         self.query_payload = {
@@ -65,10 +65,10 @@ class CreatePatientAccountController:
         return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
 
-    def create_patient_account(self):
+    def __create_patient_account(self):
         email_exists = self.query.check_email_exists(self.payload.email)
         if email_exists:
-            self.query.close()
+            self.query.stop_query()
             raise InvalidDataException("Email already exists")
         
         self.query_payload['date_of_birth'] = self.__convert_date_format(self.payload.date_of_birth) if self.payload.date_of_birth else None
@@ -76,14 +76,14 @@ class CreatePatientAccountController:
 
         account_id = self.query.create_account(self.query_payload)
         if not account_id:
-            self.query.close()
+            self.query.stop_query()
             raise ServerErrorException("Something went wrong")
 
         patient_id = self.query.create_patient(account_id)
         if not patient_id:
-            self.query.close()
+            self.query.stop_query()
             raise ServerErrorException("Something went wrong")
-        self.query.close()
+        self.query.close_query()
         self.response = {
             "account_id": account_id,
             "patient_id": patient_id
@@ -91,5 +91,5 @@ class CreatePatientAccountController:
 
 
     def execute(self):
-       self.create_patient_account()
+       self.__create_patient_account()
        return self.response

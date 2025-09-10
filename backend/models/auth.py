@@ -38,8 +38,9 @@ class CreateDoctorAccountModel(BaseModel):
     phone_number: str = Field(..., example="+1234567890")
     medical_specialty: str = Field(..., example="Cardiology")
     medical_license_number: str = Field(..., example="MED123456")
-    hospital_or_clinic_address: str = Field(..., example="123 Medical St, Health City")
-    year_of_experience: int = Field(..., example=10)
+    clinic_or_hospital_address: str = Field(..., example="123 Medical St, Health City")
+    medical_education: str = Field(..., example="Harvard Medical School")
+    years_of_experience: int = Field(..., example=10)
     
     class Config:
         schema_extra = {
@@ -50,8 +51,9 @@ class CreateDoctorAccountModel(BaseModel):
                 "phone_number": "+1234567890",
                 "medical_specialty": "Cardiology",
                 "medical_license_number": "MED123456",
-                "hospital_or_clinic_address": "123 Medical St, Health City",
-                "year_of_experience": 10
+                "clinic_or_hospital_address": "123 Medical St, Health City",
+                "medical_education": "Harvard Medical School",
+                "years_of_experience": 10
             }
         }
 

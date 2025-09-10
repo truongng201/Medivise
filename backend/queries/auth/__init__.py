@@ -1,1 +1,2 @@
 from .CreatePatientAccountQuery import CreatePatientAccountQuery
+from .CreateDoctorAccountQuery import CreateDoctorAccountQuery
