@@ -71,18 +71,6 @@ class ResetPasswordModel(BaseModel):
             }
         }
 
-class ChangePasswordModel(BaseModel):
-    old_password: str = Field(..., example="oldsecurepassword")
-    new_password: str = Field(..., example="newsecurepassword")
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "old_password": "oldsecurepassword",
-                "new_password": "newsecurepassword"
-            }
-        }
-
 class LogoutModel(BaseModel):
     refresh_token: str = Field(..., example="some-refresh-token-string")
     

@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Depends, Request
 from utils import standard_response, login_required
-from models import CreatePatientAccountModel, CreateDoctorAccountModel, LoginModel, ResetPasswordModel, ChangePasswordModel, LogoutModel
+from models import CreatePatientAccountModel, CreateDoctorAccountModel, LoginModel, ResetPasswordModel, LogoutModel
 from controller import (
     CreatePatientAccountController, 
     CreateDoctorAccountController, 
     LoginController, 
     LogoutController, 
-    ChangePasswordController, 
     ResetPasswordController, 
     GetNewAccessTokenController
 )
