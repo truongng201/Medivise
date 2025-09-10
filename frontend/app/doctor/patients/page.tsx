@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import PatientList from "../../components/patient-list"
+import PatientList from "./patient-list"
 
 export default function DoctorPatients() {
   const [user, setUser] = useState<any>(null)
@@ -21,9 +21,9 @@ export default function DoctorPatients() {
     router.push(`/doctor/patient/${patient.id}`)
   }
 
-  if (!user) {
-    return <div>Loading...</div>
-  }
+  // if (!user) {
+  //   return <div>Loading...</div>
+  // }
 
   return <PatientList user={user} onSelectPatient={handleSelectPatient} />
 }

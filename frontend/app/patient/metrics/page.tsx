@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import HealthMetrics from "../../components/health-metrics"
+import HealthMetrics from "./health-metrics"
 
 export default function PatientMetrics() {
   const [user, setUser] = useState<any>(null)
@@ -13,9 +13,9 @@ export default function PatientMetrics() {
     }
   }, [])
 
-  if (!user) {
-    return <div>Loading...</div>
-  }
+  // if (!user) {
+  //   return <div>Loading...</div>
+  // }
 
   return <HealthMetrics user={user} />
 }

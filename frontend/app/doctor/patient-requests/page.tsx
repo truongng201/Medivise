@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import DoctorPatientRequests from "../../components/doctor-patient-requests"
+import DoctorPatientRequests from "./doctor-patient-requests"
 
 export default function DoctorPatientRequestsPage() {
   const [user, setUser] = useState<any>(null)
@@ -13,9 +13,9 @@ export default function DoctorPatientRequestsPage() {
     }
   }, [])
 
-  if (!user) {
-    return <div>Loading...</div>
-  }
+  // if (!user) {
+  //   return <div>Loading...</div>
+  // }
 
   return <DoctorPatientRequests user={user} />
 }

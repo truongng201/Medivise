@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import DoctorSettings from "../../components/doctor-settings"
+import DoctorSettings from "./doctor-settings"
 
 export default function DoctorSettingsPage() {
   const [user, setUser] = useState<any>(null)
@@ -18,9 +18,9 @@ export default function DoctorSettingsPage() {
     localStorage.setItem('user', JSON.stringify(updatedUser))
   }
 
-  if (!user) {
-    return <div>Loading...</div>
-  }
+  // if (!user) {
+  //   return <div>Loading...</div>
+  // }
 
   return <DoctorSettings user={user} onUpdateUser={handleUpdateUser} />
 }

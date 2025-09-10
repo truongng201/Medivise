@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useRequireAuth } from "@/contexts/auth-context"
 import { AuthManager } from "@/lib/auth"
 
-import DoctorDashboard from "../components/doctor-dashboard"
+import DoctorDashboard from "./doctor-dashboard"
 
 export default function DoctorDashboardPage() {
   const [doctorInfo, setDoctorInfo] = useState<any>(null)

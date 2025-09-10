@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Appointments from "../../components/appointments"
+import Appointments from "./appointments"
 
 export default function PatientAppointments() {
   const [user, setUser] = useState<any>(null)
@@ -13,9 +13,9 @@ export default function PatientAppointments() {
     }
   }, [])
 
-  if (!user) {
-    return <div>Loading...</div>
-  }
+  // if (!user) {
+  //   return <div>Loading...</div>
+  // }
 
   return <Appointments user={user} />
 }

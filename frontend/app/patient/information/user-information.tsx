@@ -173,9 +173,9 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
             <CardContent className="space-y-6">
               <div className="flex items-center space-x-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                  <AvatarImage src={user?.profile_picture_url || "/placeholder.svg"} alt={user?.name} />
                   <AvatarFallback className="text-lg">
-                    {user.name
+                    {user?.name
                       ?.split(" ")
                       .map((n: string) => n[0])
                       .join("")}
@@ -200,7 +200,7 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
                   ) : (
                     <div className="flex items-center space-x-2">
                       <User className="h-4 w-4 text-gray-500" />
-                      <span>{user.name}</span>
+                      <span>{user?.name}</span>
                     </div>
                   )}
                 </div>
@@ -217,7 +217,7 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
                   ) : (
                     <div className="flex items-center space-x-2">
                       <Mail className="h-4 w-4 text-gray-500" />
-                      <span>{user.email}</span>
+                      <span>{user?.email}</span>
                     </div>
                   )}
                 </div>
@@ -233,7 +233,7 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
                   ) : (
                     <div className="flex items-center space-x-2">
                       <Phone className="h-4 w-4 text-gray-500" />
-                      <span>{user.phone || "Not provided"}</span>
+                      <span>{user?.phone || "Not provided"}</span>
                     </div>
                   )}
                 </div>
@@ -250,7 +250,7 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
                   ) : (
                     <div className="flex items-center space-x-2">
                       <CalendarIcon className="h-4 w-4 text-gray-500" />
-                      <span>{user.dateOfBirth || "Not provided"}</span>
+                      <span>{user?.dateOfBirth || "Not provided"}</span>
                     </div>
                   )}
                 </div>
@@ -266,7 +266,7 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
                   ) : (
                     <div className="flex items-center space-x-2">
                       <MapPin className="h-4 w-4 text-gray-500" />
-                      <span>{user.address || "Not provided"}</span>
+                      <span>{user?.address || "Not provided"}</span>
                     </div>
                   )}
                 </div>
@@ -293,8 +293,8 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
                 <div className="space-y-4">
                   <h3 className="font-semibold">Current Medications</h3>
                   <div className="space-y-2">
-                    {Array.isArray(user.medications) && user.medications.length > 0 ? (
-                      user.medications.map((medication: any, index: number) => (
+                    {Array.isArray(user?.medications) && user?.medications.length > 0 ? (
+                      user?.medications.map((medication: any, index: number) => (
                         <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                           <span>{medication.name}</span>
                           <Badge variant="outline">{medication.dosage}</Badge>
@@ -309,7 +309,7 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
                 <div className="space-y-4 md:col-span-2">
                   <h3 className="font-semibold">Medical Conditions</h3>
                   <div className="flex flex-wrap gap-2">
-                    {user.conditions?.map((condition: string, index: number) => (
+                    {user?.conditions?.map((condition: string, index: number) => (
                       <Badge key={index} variant="secondary">
                         {condition}
                       </Badge>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import UserInformation from "../../components/user-information"
+import UserInformation from "./user-information"
 
 export default function PatientInformation() {
   const [user, setUser] = useState<any>(null)
@@ -18,9 +18,9 @@ export default function PatientInformation() {
     localStorage.setItem('user', JSON.stringify(updatedUser))
   }
 
-  if (!user) {
-    return <div>Loading...</div>
-  }
+  // if (!user) {
+  //   return <div>Loading...</div>
+  // }
 
   return <UserInformation user={user} onUpdateUser={handleUpdateUser} />
 }

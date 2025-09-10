@@ -34,7 +34,7 @@ interface DoctorSettingsProps {
 
 export default function DoctorSettings({ user, onUpdateUser }: DoctorSettingsProps) {
   const [formData, setFormData] = useState({
-    name: user?.name || "",
+    name: user?.fullname || "",
     email: user?.email || "",
     phone: user?.phone || "",
     bio: user?.bio || "",
@@ -127,9 +127,9 @@ export default function DoctorSettings({ user, onUpdateUser }: DoctorSettingsPro
               {/* Profile Photo */}
               <div className="flex items-center space-x-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
+                  <AvatarImage src={user?.profile_picture_url || "/placeholder.svg"} alt={user?.fullname} />
                   <AvatarFallback className="text-lg">
-                    {user?.name
+                    {user?.fullname
                       ?.split(" ")
                       .map((n: string) => n[0])
                       .join("")}

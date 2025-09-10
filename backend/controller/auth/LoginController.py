@@ -55,7 +55,7 @@ class LoginController:
             self.query.stop()
             raise InvalidDataException("Invalid email or password")
 
-        account_id, email, password_hash, profile_picture_url = account
+        account_id, email, password_hash, profile_picture_url, fullname = account
 
         if not self.__verify_password(self.payload.password, password_hash):
             self.query.stop()
@@ -86,6 +86,7 @@ class LoginController:
         access_token = sign_token(jwt_payload)
         del jwt_payload["exp"]
         jwt_payload["profile_picture_url"] = profile_picture_url
+        jwt_payload["fullname"] = fullname
         self.login_log_payload = {
             "account_id": account_id,
             "refresh_token": refresh_token,

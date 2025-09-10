@@ -21,7 +21,7 @@ interface UserProfileProps {
 
 export default function UserProfile({ user, onUpdateUser, onNavigateToDashboard, onLogout }: UserProfileProps) {
   const [formData, setFormData] = useState({
-    name: user?.name || "",
+    name: user?.fullname || "",
     email: user?.email || "",
     phone: user?.phone || "",
     address: user?.address || "",
@@ -154,9 +154,9 @@ export default function UserProfile({ user, onUpdateUser, onNavigateToDashboard,
                 {/* Profile Picture */}
                 <div className="flex items-center space-x-6">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
+                    <AvatarImage src={user?.profile_picture_url || "/placeholder.svg"} alt={user?.fullname} />
                     <AvatarFallback className="text-lg">
-                      {user?.name
+                      {user?.fullname
                         ?.split(" ")
                         .map((n: string) => n[0])
                         .join("")}

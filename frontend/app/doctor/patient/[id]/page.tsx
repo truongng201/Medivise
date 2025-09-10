@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
-import PatientDetails from "../../../components/patient-details"
+import PatientDetails from "./patient-details"
 
 export default function DoctorPatientDetails() {
   const [user, setUser] = useState<any>(null)
@@ -28,9 +28,9 @@ export default function DoctorPatientDetails() {
     router.push('/doctor/patients')
   }
 
-  if (!user || !selectedPatient) {
-    return <div>Loading...</div>
-  }
+  // if (!user || !selectedPatient) {
+  //   return <div>Loading...</div>
+  // }
 
   return (
     <PatientDetails
