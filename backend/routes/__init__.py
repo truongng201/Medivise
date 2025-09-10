@@ -1,4 +1,3 @@
-from .api_router import api_router
 from .ml_router import ml_router
 from .auth_router import auth_router
 from .patient_router import patient_router
