@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { DoctorSidebar } from "../components/doctor-sidebar"
+import { Spinner } from "@/components/ui/spinner"
 
 export default function DoctorLayout({
   children,
@@ -65,7 +66,14 @@ export default function DoctorLayout({
   }
 
   if (!user) {
-    return <div>Loading...</div>
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center space-y-4">
+          <Spinner size="lg" className="text-slate-600" />
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

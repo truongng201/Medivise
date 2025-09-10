@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, Mail, Lock, User, Phone, Calendar } from "lucide-react"
+import { Spinner } from "@/components/ui/spinner"
 
 interface SignupPageProps {
   onSignup: (userData: any) => void
@@ -59,54 +60,41 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onSwitchToDoctor
       return
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      const userData = {
-        id: Math.floor(Math.random() * 1000) + 1,
-        userType: "patient",
-        name: formData.name,
-        email: formData.email,
-        avatar: "/placeholder.svg",
-        phone: formData.phone || "+1 (555) 123-4567",
-        dateOfBirth: formData.dateOfBirth || "1990-01-01",
-        assignedDoctors: [{ id: 1, name: "Dr. Sarah Johnson", specialty: "Cardiologist" }],
-        // Default health data
-        age: 30,
-        gender_F: false,
-        gender_M: true,
-        race_asian: false,
-        race_black: false,
-        race_white: true,
-        ethnicity_hispanic: false,
-        ethnicity_nonhispanic: true,
-        tobacco_smoking_status_Current_every_day_smoker: false,
-        tobacco_smoking_status_Former_smoker: false,
-        tobacco_smoking_status_Never_smoker: true,
-        systolic_bp: 120,
-        diastolic_bp: 80,
-        heart_rate: 72,
-        respiratory_rate: 16,
-        pain_severity: 0,
-        bmi: 22.0,
-        calcium: 10.0,
-        carbon_dioxide: 24,
-        chloride: 100,
-        creatinine: 1.0,
-        glucose: 90,
-        potassium: 4.0,
-        sodium: 140,
-        urea_nitrogen: 15,
-        medication_count: 0,
-        bloodType: "O+",
-        address: "123 Main St, Anytown, USA 12345",
-        emergencyContact: "Emergency Contact - +1 (555) 987-6543",
-        allergies: "None",
-        medications: "None",
-        medicalConditions: "None",
+    try {
+      // Format date to DD-MM-YYYY if provided
+      let formattedDate = ""
+      if (formData.dateOfBirth) {
+        const date = new Date(formData.dateOfBirth)
+        formattedDate = `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getFullYear()}`
       }
-      onSignup(userData)
+
+      // Create patient account
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/create_patient_account`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date_of_birth: formattedDate || "01-01-1990",
+          email: formData.email,
+          fullname: formData.name,
+          password: formData.password,
+          phone_number: formData.phone || "",
+        }),
+      })
+
+      if (response.ok) {
+        // Success - redirect to login
+        onSwitchToLogin()
+      } else {
+        const errorData = await response.json()
+        setError(errorData.message || "Failed to create account. Please try again.")
+      }
+    } catch (error) {
+      setError("Network error. Please check your connection and try again.")
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -265,7 +253,14 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onSwitchToDoctor
               </div>
 
               <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700" disabled={isLoading}>
-                {isLoading ? "Creating Account..." : "Create Patient Account"}
+                {isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <Spinner size="sm" className="text-white" />
+                    <span>Creating Account...</span>
+                  </div>
+                ) : (
+                  "Create Patient Account"
+                )}
               </Button>
             </form>
 

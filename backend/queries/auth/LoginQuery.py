@@ -2,7 +2,7 @@ from ..QueryBase import QueryBase
 
 class LoginQuery(QueryBase):
     def get_account_by_email(self, email):
-        query = "SELECT account_id, email, password_hash FROM accounts WHERE email = %s"
+        query = "SELECT account_id, email, password_hash, profile_picture_url FROM accounts WHERE email = %s"
         response = self.db.execute_query(query, (email,))
         if not response or len(response) == 0:
             return None

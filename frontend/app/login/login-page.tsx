@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Eye, EyeOff, Mail, Lock, User, Stethoscope } from "lucide-react"
-import { Spinner } from "@/components/ui/spinner"
 
 interface LoginPageProps {
   onLogin: (userData: any) => void
@@ -47,7 +46,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onSwitchToDoctorS
 
     try {
       // Call login API
-      const response = await fetch("/api/v1/auth/login", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -63,7 +62,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onSwitchToDoctorS
         const responseData = await response.json()
         
         // Store the response payload in localStorage
-        localStorage.setItem('authData', JSON.stringify(responseData))
+        localStorage.setItem('authData', JSON.stringify(responseData?.data))
         
         // Create user data object for the app state
         const userData = {
@@ -169,14 +168,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onSwitchToDoctorS
                   </div>
 
                   <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700" disabled={isLoading}>
-                    {isLoading ? (
-                      <div className="flex items-center space-x-2">
-                        <Spinner size="sm" className="text-white" />
-                        <span>Signing In...</span>
-                      </div>
-                    ) : (
-                      "Sign In as Patient"
-                    )}
+                    {isLoading ? "Signing In..." : "Sign In as Patient"}
                   </Button>
                 </form>
               </TabsContent>
@@ -236,14 +228,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onSwitchToDoctorS
                   </div>
 
                   <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700" disabled={isLoading}>
-                    {isLoading ? (
-                      <div className="flex items-center space-x-2">
-                        <Spinner size="sm" className="text-white" />
-                        <span>Signing In...</span>
-                      </div>
-                    ) : (
-                      "Sign In as Doctor"
-                    )}
+                    {isLoading ? "Signing In..." : "Sign In as Doctor"}
                   </Button>
                 </form>
               </TabsContent>
@@ -271,27 +256,6 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onSwitchToDoctorS
             </div>
           </CardContent>
         </Card>
-
-        {/* Demo Credentials */}
-        {/* <Card className="bg-slate-50 border-slate-200">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <p className="text-sm font-medium text-slate-800">Demo Credentials</p>
-              <div className="grid grid-cols-2 gap-4 text-xs text-slate-600">
-                <div className="space-y-1">
-                  <p className="font-medium">Patient Account:</p>
-                  <p>Email: patient@demo.com</p>
-                  <p>Password: patient123</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium">Doctor Account:</p>
-                  <p>Email: doctor@demo.com</p>
-                  <p>Password: doctor123</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card> */}
       </div>
     </div>
   )

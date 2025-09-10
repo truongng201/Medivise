@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Eye, EyeOff, Mail, Lock, User, Phone, Stethoscope, Building, GraduationCap } from "lucide-react"
+import { Spinner } from "@/components/ui/spinner"
 
 interface DoctorSignupPageProps {
   onSwitchToLogin: () => void
@@ -88,11 +89,38 @@ export default function DoctorSignupPage({
       return
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      
+    try {
+      // Create doctor account
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/create_doctor_account`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clinic_or_hospital_address: formData.hospital || "",
+          email: formData.email,
+          fullname: formData.name,
+          medical_education: formData.education || "",
+          medical_license_number: formData.licenseNumber,
+          medical_specialty: formData.specialty,
+          password: formData.password,
+          phone_number: formData.phone || "",
+          years_of_experience: parseInt(formData.experience) || 0,
+        }),
+      })
+
+      if (response.ok) {
+        // Success - redirect to login
+        onSwitchToLogin()
+      } else {
+        const errorData = await response.json()
+        setError(errorData.message || "Failed to create account. Please try again.")
+      }
+    } catch (error) {
+      setError("Network error. Please check your connection and try again.")
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -317,7 +345,14 @@ export default function DoctorSignupPage({
               </div>
 
               <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700 h-10" disabled={isLoading}>
-                {isLoading ? "Creating Account..." : "Create Doctor Account"}
+                {isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <Spinner size="sm" className="text-white" />
+                    <span>Creating Account...</span>
+                  </div>
+                ) : (
+                  "Create Doctor Account"
+                )}
               </Button>
             </form>
 

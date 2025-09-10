@@ -38,7 +38,7 @@ class CreatePatientAccountController:
             raise InvalidDataException("Full name can only contain letters and spaces")
 
         if phone_number:
-            if not re.match(r"^\+?[1-9]\d{1,14}$", phone_number):
+            if not re.match(r"\?[1-9]\d{1,14}$", phone_number):
                 self.query.stop()
                 raise InvalidDataException("Invalid phone number format")
 

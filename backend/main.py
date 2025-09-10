@@ -19,7 +19,7 @@ app.include_router(auth_router, tags=["Authentication"], prefix=f"/api/{API_VERS
 app.include_router(patient_router, tags=["Patient Management"], prefix=f"/api/{API_VERSION}/patient")
 app.include_router(doctor_router, tags=["Doctor Management"], prefix=f"/api/{API_VERSION}/doctor")
 
-origins = ["*"] if ENV == "development" else os.getenv("CORS_ORIGINS", "").split(",")
+origins = ["*"] if ENV in ['development', 'dev'] else os.getenv("CORS_ORIGINS", "").split(",")
 
 app.add_middleware(
     CORSMiddleware,
