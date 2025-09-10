@@ -6,7 +6,7 @@ class LoginModel(BaseModel):
     role: str = Field(..., example="doctor")  # or "patient"
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "email": "user@example.com",
                 "password": "securepassword",
@@ -22,7 +22,7 @@ class CreatePatientAccountModel(BaseModel):
     date_of_birth: str = Field(..., example="30-12-1990")  # Format: DD-MM-YYYY
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "email": "patient@example.com",
                 "password": "Securepassword123",
@@ -45,7 +45,7 @@ class CreateDoctorAccountModel(BaseModel):
     years_of_experience: int = Field(..., example=10)
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "email": "doctor@example.com",
                 "password": "securepassword",
@@ -64,7 +64,7 @@ class ResetPasswordModel(BaseModel):
     new_password: str = Field(..., example="newsecurepassword")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "email": "user@example.com",
                 "new_password": "newsecurepassword"
@@ -76,7 +76,7 @@ class ChangePasswordModel(BaseModel):
     new_password: str = Field(..., example="newsecurepassword")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "old_password": "oldsecurepassword",
                 "new_password": "newsecurepassword"
@@ -84,13 +84,11 @@ class ChangePasswordModel(BaseModel):
         }
 
 class LogoutModel(BaseModel):
-    account_id: str = Field(..., example="123e4567-e89b-12d3-a456-426614174000")
     refresh_token: str = Field(..., example="some-refresh-token-string")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
-                "account_id": "123e4567-e89b-12d3-a456-426614174000",
                 "refresh_token": "some-refresh-token-string"
             }
         }
@@ -100,7 +98,7 @@ class TokenModel(BaseModel):
     refresh_token: str = Field(..., example="some-refresh-token-string")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "access_token": "some-access-token-string",
                 "refresh_token": "some-refresh-token-string"

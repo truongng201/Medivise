@@ -37,8 +37,9 @@ def login(payload: LoginModel, request: Request):
 
 @auth_router.post("/logout")
 @standard_response
-def logout(payload: LogoutModel, account_info=Depends(login_required)):
-    controller = LogoutController(payload, account_info)
+def logout(payload: LogoutModel, request: Request, account_info=Depends(login_required)):
+    access_token = request.headers.get("Authorization")
+    controller = LogoutController(payload, account_info, access_token)
     response = controller.execute()
     return response
 
