@@ -5,9 +5,9 @@ class QueryBase(ABC):
     def __init__(self):
         self.db = Database()
 
-    def close_query(self):
+    def close(self):
         self.db.close_pool()
         
-    def stop_query(self):
+    def stop(self):
         self.db.rollback()
         self.db.close_pool()

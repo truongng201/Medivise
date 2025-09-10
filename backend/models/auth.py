@@ -3,12 +3,14 @@ from pydantic import BaseModel, Field
 class LoginModel(BaseModel):
     email: str = Field(..., example="user@example.com")
     password: str = Field(..., example="securepassword")
+    role: str = Field(..., example="doctor")  # or "patient"
     
     class Config:
         schema_extra = {
             "example": {
                 "email": "user@example.com",
-                "password": "securepassword"
+                "password": "securepassword",
+                "role": "doctor"
             }
         }
 

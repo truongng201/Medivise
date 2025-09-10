@@ -1,6 +1,7 @@
 class ResetPasswordController:
     def __init__(self, payload):
         self.payload = payload
+        self.response = None
 
     def execute(self):
-        return {"message": "Password reset successfully", "data": self.payload}
+        return self.response

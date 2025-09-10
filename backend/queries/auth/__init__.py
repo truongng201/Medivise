@@ -1,2 +1,7 @@
 from .CreatePatientAccountQuery import CreatePatientAccountQuery
 from .CreateDoctorAccountQuery import CreateDoctorAccountQuery
+from .LoginQuery import LoginQuery
+from .LogoutQuery import LogoutQuery
+from .ResetPasswordQuery import ResetPasswordQuery
+from .ChangePasswordQuery import ChangePasswordQuery
+from .GetNewAccessTokenQuery import GetNewAccessTokenQuery

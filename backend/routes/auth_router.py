@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends
-from utils import standard_response, login_required, logger
+from fastapi import APIRouter, Depends, Request
+from utils import standard_response, login_required
 from models import CreatePatientAccountModel, CreateDoctorAccountModel, LoginModel, ResetPasswordModel, ChangePasswordModel, LogoutModel
 from controller import (
     CreatePatientAccountController, 
@@ -28,9 +28,11 @@ def create_doctor_account(payload: CreateDoctorAccountModel):
 
 @auth_router.post("/login")
 @standard_response
-def login(payload: LoginModel):
-    controller = LoginController()
-    response = controller.execute(payload)
+def login(payload: LoginModel, request: Request):
+    client_ip = request.client.host
+    user_agent = request.headers.get('User-Agent', 'unknown')
+    controller = LoginController(payload, client_ip, user_agent)
+    response = controller.execute()
     return response
 
 @auth_router.post("/logout")
