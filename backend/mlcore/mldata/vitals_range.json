@@ -1,0 +1,62 @@
+{
+  "calcium": {
+    "low": 8.5,
+    "high": 10.5,
+    "unit": "mg/dL"
+  },
+  "carbon_dioxide": {
+    "low": 22,
+    "high": 29,
+    "unit": "mmol/L"
+  },
+  "chloride": {
+    "low": 96,
+    "high": 106,
+    "unit": "mmol/L"
+  },
+  "creatinine": {
+      "low": 0.59,
+      "high": 1.35,
+      "unit": "mg/dL"
+  },
+  "diastolic_bp": {
+    "low": 60,
+    "high": 80,
+    "unit": "mmHg"
+  },
+  "glucose": {
+    "low": 70,
+    "high": 99,
+    "unit": "mg/dL"
+  },
+  "heart_rate": {
+    "low": 60,
+    "high": 100,
+    "unit": "bpm"
+  },
+  "potassium": {
+    "low": 3.5,
+    "high": 5.0,
+    "unit": "mmol/L"
+  },
+  "respiratory_rate": {
+    "low": 12,
+    "high": 20,
+    "unit": "breaths/min"
+  },
+  "sodium": {
+    "low": 135,
+    "high": 145,
+    "unit": "mmol/L"
+  },
+  "systolic_bp": {
+    "low": 90,
+    "high": 120,
+    "unit": "mmHg"
+  },
+  "urea_nitrogen": {
+    "low": 7,
+    "high": 20,
+    "unit": "mg/dL"
+  }
+}
