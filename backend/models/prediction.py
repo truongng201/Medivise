@@ -2,12 +2,12 @@ from typing import Literal, Optional, List
 from pydantic import BaseModel, Field
 
 class FeatureRecord(BaseModel):
-    gender: Literal["F", "M"] = "F"
-    race: Literal["asian", "black", "white"] = "white"
+    gender: Literal["F", "M", "Other"] = "F"
+    race: Literal["asian", "black", "white", "other"] = "white"
     ethnicity: Literal["hispanic", "nonhispanic"] = "nonhispanic"
     tobacco_smoking_status: Literal[
-        "Current every day smoker", "Never smoker", "Former smoker"
-    ] = "Never smoker"
+        "current", "former", "never"
+    ] = "never"
     pain_severity: Optional[float] = None
     age: Optional[float] = None
     bmi: Optional[float] = None

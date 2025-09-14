@@ -37,16 +37,19 @@ import {
   Clock,
   UserPlus,
   Send,
+  Fingerprint,
+  Package2,
+  Bandage
 } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 
 interface UserInformationProps {
   user: any
-  onUpdateUser: (user: any) => void
+  // onUpdateUser: (user: any) => void
 }
 
-export default function UserInformation({ user, onUpdateUser }: UserInformationProps) {
+export default function UserInformation({ user }: UserInformationProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedUser, setEditedUser] = useState(user)
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null)
@@ -114,7 +117,7 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
   const timeSlots = ["09:00 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:00 PM"]
 
   const handleSave = () => {
-    onUpdateUser(editedUser)
+    // onUpdateUser(editedUser)
     setIsEditing(false)
   }
 
@@ -173,9 +176,9 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
             <CardContent className="space-y-6">
               <div className="flex items-center space-x-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={user?.profile_picture_url || "/placeholder.svg"} alt={user?.name} />
+                  <AvatarImage src={user?.profile_picture_url || "/placeholder.svg"} alt={user?.fullname} />
                   <AvatarFallback className="text-lg">
-                    {user?.name
+                    {user?.fullname
                       ?.split(" ")
                       .map((n: string) => n[0])
                       .join("")}
@@ -194,13 +197,13 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
                   {isEditing ? (
                     <Input
                       id="name"
-                      value={editedUser.name}
-                      onChange={(e) => setEditedUser({ ...editedUser, name: e.target.value })}
+                      value={editedUser.fullname}
+                      onChange={(e) => setEditedUser({ ...editedUser, fullname: e.target.value })}
                     />
                   ) : (
                     <div className="flex items-center space-x-2">
                       <User className="h-4 w-4 text-gray-500" />
-                      <span>{user?.name}</span>
+                      <span>{user?.fullname}</span>
                     </div>
                   )}
                 </div>
@@ -227,13 +230,13 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
                   {isEditing ? (
                     <Input
                       id="phone"
-                      value={editedUser.phone || ""}
-                      onChange={(e) => setEditedUser({ ...editedUser, phone: e.target.value })}
+                      value={editedUser.phone_number || ""}
+                      onChange={(e) => setEditedUser({ ...editedUser, phone_number: e.target.value })}
                     />
                   ) : (
                     <div className="flex items-center space-x-2">
                       <Phone className="h-4 w-4 text-gray-500" />
-                      <span>{user?.phone || "Not provided"}</span>
+                      <span>{user?.phone_number || "Not provided"}</span>
                     </div>
                   )}
                 </div>
@@ -244,33 +247,146 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
                     <Input
                       id="dateOfBirth"
                       type="date"
-                      value={editedUser.dateOfBirth || ""}
-                      onChange={(e) => setEditedUser({ ...editedUser, dateOfBirth: e.target.value })}
+                      value={editedUser.date_of_birth || ""}
+                      onChange={(e) => setEditedUser({ ...editedUser, date_of_birth: e.target.value })}
                     />
                   ) : (
                     <div className="flex items-center space-x-2">
                       <CalendarIcon className="h-4 w-4 text-gray-500" />
-                      <span>{user?.dateOfBirth || "Not provided"}</span>
+                      <span>{user?.date_of_birth || "Not provided"}</span>
                     </div>
                   )}
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address">Address</Label>
-                  {isEditing ? (
-                    <Textarea
-                      id="address"
-                      value={editedUser.address || ""}
-                      onChange={(e) => setEditedUser({ ...editedUser, address: e.target.value })}
-                    />
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="h-4 w-4 text-gray-500" />
-                      <span>{user?.address || "Not provided"}</span>
-                    </div>
-                  )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Gender */}
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender</Label>
+                    {isEditing ? (
+                      <Select value={editedUser.gender || ""} onValueChange={val => setEditedUser({ ...editedUser, gender: val })}>
+                        <SelectTrigger id="gender">
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span>{user?.gender || "Not provided"}</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Ethnicity */}
+                  <div className="space-y-2">
+                    <Label htmlFor="ethnicity">Ethnicity</Label>
+                    {isEditing ? (
+                      <Select value={editedUser.ethnicity || ""} onValueChange={val => setEditedUser({ ...editedUser, ethnicity: val })}>
+                        <SelectTrigger id="ethnicity">
+                          <SelectValue placeholder="Select ethnicity" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hispanic">Hispanic</SelectItem>
+                          <SelectItem value="nonhispanic">Non-Hispanic</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span>{user?.ethnicity || "Not provided"}</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Race */}
+                  <div className="space-y-2">
+                    <Label htmlFor="race">Race</Label>
+                    {isEditing ? (
+                      <Select value={editedUser.race || ""} onValueChange={val => setEditedUser({ ...editedUser, race: val })}>
+                        <SelectTrigger id="race">
+                          <SelectValue placeholder="Select race" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="asian">Asian</SelectItem>
+                          <SelectItem value="black">Black</SelectItem>
+                          <SelectItem value="white">White</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span>{user?.race || "Not provided"}</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Tobacco Smoking Status */}
+                  <div className="space-y-2">
+                    <Label htmlFor="tobacco">Tobacco Smoking Status</Label>
+                    {isEditing ? (
+                      <Select value={editedUser.tobacco || ""} onValueChange={val => setEditedUser({ ...editedUser, tobacco: val })}>
+                        <SelectTrigger id="tobacco">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="never">Never smoker</SelectItem>
+                          <SelectItem value="former">Former smoker</SelectItem>
+                          <SelectItem value="current">Current every day smoker</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span>{user?.tobacco || "Not provided"}</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Pain Severity */}
+                  <div className="space-y-2">
+                    <Label htmlFor="pain">Pain Severity</Label>
+                    {isEditing ? (
+                      <Select value={editedUser.pain || ""} onValueChange={val => setEditedUser({ ...editedUser, pain: val })}>
+                        <SelectTrigger id="pain">
+                          <SelectValue placeholder="Select severity" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="mild">Mild</SelectItem>
+                          <SelectItem value="moderate">Moderate</SelectItem>
+                          <SelectItem value="severe">Severe</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span>{user?.pain || "Not provided"}</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* BMI */}
+                  <div className="space-y-2">
+                    <Label htmlFor="bmi">BMI</Label>
+                    {isEditing ? (
+                      <Input
+                        id="bmi"
+                        type="number"
+                        value={editedUser.bmi || ""}
+                        onChange={e => setEditedUser({ ...editedUser, bmi: e.target.value })}
+                      />
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span>{user?.bmi || "Not provided"}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
+
+              
             </CardContent>
           </Card>
         </TabsContent>
@@ -286,15 +402,15 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
                 <div className="space-y-4">
                   <h3 className="font-semibold">Allergies</h3>
                   <div className="flex flex-wrap gap-2">
-                  <span className="text-gray-500">No known allergies</span>
+                  <span className="text-gray-500">{user?.allergies?.join(", ") || "No known allergies"}</span>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <h3 className="font-semibold">Current Medications</h3>
                   <div className="space-y-2">
-                    {Array.isArray(user?.medications) && user?.medications.length > 0 ? (
-                      user?.medications.map((medication: any, index: number) => (
+                    {Array.isArray(user?.current_medications) && user?.current_medications.length > 0 ? (
+                      user?.current_medications.map((medication: any, index: number) => (
                         <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                           <span>{medication.name}</span>
                           <Badge variant="outline">{medication.dosage}</Badge>
@@ -306,16 +422,6 @@ export default function UserInformation({ user, onUpdateUser }: UserInformationP
                   </div>
                 </div>
 
-                <div className="space-y-4 md:col-span-2">
-                  <h3 className="font-semibold">Medical Conditions</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {user?.conditions?.map((condition: string, index: number) => (
-                      <Badge key={index} variant="secondary">
-                        {condition}
-                      </Badge>
-                    )) || <span className="text-gray-500">No known conditions</span>}
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>

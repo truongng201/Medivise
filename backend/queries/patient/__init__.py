@@ -1,0 +1,1 @@
+from .GetPatientInfoQuery import GetPatientInfoQuery

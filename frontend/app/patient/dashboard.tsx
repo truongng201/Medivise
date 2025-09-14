@@ -9,19 +9,9 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ user }: DashboardProps) {
-  const healthMetrics = [
-    { name: "Blood Pressure", value: 85, status: "good", trend: "stable", unit: "mmHg", current: "120/80" },
-    { name: "Cholesterol", value: 92, status: "excellent", trend: "improving", unit: "mg/dL", current: "180" },
-    { name: "Blood Sugar", value: 78, status: "good", trend: "stable", unit: "mg/dL", current: "95" },
-    { name: "BMI", value: 88, status: "good", trend: "stable", unit: "", current: "23.5" },
-    { name: "Heart Rate", value: 90, status: "excellent", trend: "improving", unit: "BPM", current: "72" },
-    { name: "Weight", value: 82, status: "good", trend: "decreasing", unit: "lbs", current: "145" },
-  ]
-
+  const healthMetrics: any[] = Array.isArray(user?.health_metrics) ? user?.health_metrics : [];
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "excellent":
-        return <CheckCircle className="h-4 w-4 text-slate-500" />
       case "good":
         return <CheckCircle className="h-4 w-4 text-slate-400" />
       case "warning":
@@ -37,7 +27,7 @@ export default function Dashboard({ user }: DashboardProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user?.fullname}</h1>
-          <p className="text-gray-600">Track your key health indicators over time</p>
+          <p className="text-gray-600">Track your key health indicators over time. Current update: {user?.recorded_time || "No updates available"}</p>
         </div>
       </div>
 
@@ -48,14 +38,11 @@ export default function Dashboard({ user }: DashboardProps) {
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {healthMetrics.map((metric, index) => (
+          {healthMetrics?.map((metric: any, index: number) => (
             <Card key={index} className="focus-within:ring-slate-500">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg text-gray-900">{metric.name}</CardTitle>
-                  <div className="flex items-center space-x-2" aria-label={`${metric.name} status and trend`}>
-                    {getStatusIcon(metric.status)}
-                  </div>
+                  <CardTitle className="text-lg text-gray-900">{metric?.name}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -63,12 +50,12 @@ export default function Dashboard({ user }: DashboardProps) {
                   <div className="flex items-center justify-between">
                     <span
                       className="text-2xl font-bold text-gray-900"
-                      aria-label={`Current ${metric.name.toLowerCase()}: ${metric.current} ${metric.unit}`}
+                      aria-label={`Current ${metric?.name.toLowerCase()}: ${metric?.current} ${metric?.unit}`}
                     >
-                      {metric.current} {metric.unit}
+                      {metric?.value} {metric?.unit}
                     </span>
-                    <Badge variant={metric.status === "excellent" ? "default" : "secondary"} className="text-xs">
-                      {metric.status}
+                    <Badge variant={metric?.status === "excellent" ? "default" : "secondary"} className="text-xs">
+                      {metric?.status}
                     </Badge>
                   </div>
                 </div>
