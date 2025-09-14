@@ -28,7 +28,6 @@ export default function PatientDashboard() {
         setIsLoadingInfo(false)
       }
     }
-
     if (isAuthenticated) {
       fetchPatientInfo()
     }
@@ -60,6 +59,5 @@ export default function PatientDashboard() {
       </div>
     )
   }
-
   return <Dashboard user={patientInfo || authData} />
 }

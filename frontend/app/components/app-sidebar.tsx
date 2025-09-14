@@ -26,10 +26,10 @@ interface AppSidebarProps {
 export function AppSidebar({ user, activeTab, onTabChange, onLogout }: AppSidebarProps) {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "records", label: "Medical Records", icon: FileText },
+    // { id: "records", label: "Medical Records", icon: FileText },
     { id: "user-info", label: "User Information", icon: User },
-    { id: "appointments", label: "Appointments", icon: Calendar },
-    { id: "metrics", label: "Health Metrics", icon: Activity },
+    // { id: "appointments", label: "Appointments", icon: Calendar },
+    // { id: "metrics", label: "Health Metrics", icon: Activity },
   ]
 
   return (

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from typing import List
 from sklearn.preprocessing import LabelEncoder
-from groq import Groq
+# from groq import Groq
 from dotenv import load_dotenv
 import os
 from utils import BadRequestException
@@ -114,66 +114,66 @@ class MLCore:
         X = X.fillna(0.0)
         return X
     
-class ClinicalAssistant:
-    def __init__(self, api_key=None, model="openai/gpt-oss-20b"):
-        load_dotenv()
-        self.api_key = api_key or os.getenv("GROQ_API_KEY")
-        self.client = Groq(api_key=self.api_key)
-        self.model = model
+# class ClinicalAssistant:
+#     def __init__(self, api_key=None, model="openai/gpt-oss-20b"):
+#         load_dotenv()
+#         self.api_key = api_key or os.getenv("GROQ_API_KEY")
+#         self.client = Groq(api_key=self.api_key)
+#         self.model = model
 
-        # System prompt
-        self.system_prompt = """
-        You are a professional clinical assistant. Your role is to support clinicians by analyzing:
+#         # System prompt
+#         self.system_prompt = """
+#         You are a professional clinical assistant. Your role is to support clinicians by analyzing:
 
-        - Model prediction
-        - Patient vitals 
+#         - Model prediction
+#         - Patient vitals 
 
-        From these inputs, generate a structured and concise set of **recommendations**, including:  
-        1. Suggested actions  
-        2. Monitoring requirements  
-        3. Red flags to watch for  
+#         From these inputs, generate a structured and concise set of **recommendations**, including:  
+#         1. Suggested actions  
+#         2. Monitoring requirements  
+#         3. Red flags to watch for  
 
-        For each recommendation, provide clinical reasoning where appropriate.  
-        Important rules for your behavior:  
-        - Always include a clear disclaimer: these are AI-generated recommendations and must be reviewed by a licensed physician before any decisions are made.  
-        - Present information in a professional, concise, and medically accurate manner.  
-        - Do not make definitive diagnostic or treatment claims — state only facts, guidelines, or possible considerations.  
-        - After initialization, continue as a clinical assistant in a professional, cautious tone during conversation.  
-        """
+#         For each recommendation, provide clinical reasoning where appropriate.  
+#         Important rules for your behavior:  
+#         - Always include a clear disclaimer: these are AI-generated recommendations and must be reviewed by a licensed physician before any decisions are made.  
+#         - Present information in a professional, concise, and medically accurate manner.  
+#         - Do not make definitive diagnostic or treatment claims — state only facts, guidelines, or possible considerations.  
+#         - After initialization, continue as a clinical assistant in a professional, cautious tone during conversation.  
+#         """
 
-        # Initialize conversation memory
-        self.messages = [
-            {"role": "system", "content": self.system_prompt}
-        ]
+#         # Initialize conversation memory
+#         self.messages = [
+#             {"role": "system", "content": self.system_prompt}
+#         ]
 
-    def chat(self, user_input, stream=True, temperature=0.7, max_tokens=8192, top_p=1):
-        """Send a message to the assistant and get a reply."""
-        self.messages.append({"role": "user", "content": user_input})
+#     def chat(self, user_input, stream=True, temperature=0.7, max_tokens=8192, top_p=1):
+#         """Send a message to the assistant and get a reply."""
+#         self.messages.append({"role": "user", "content": user_input})
 
-        completion = self.client.chat.completions.create(
-            model=self.model,
-            messages=self.messages,
-            temperature=temperature,
-            max_completion_tokens=max_tokens,
-            top_p=top_p,
-            stream=stream
-        )
+#         completion = self.client.chat.completions.create(
+#             model=self.model,
+#             messages=self.messages,
+#             temperature=temperature,
+#             max_completion_tokens=max_tokens,
+#             top_p=top_p,
+#             stream=stream
+#         )
 
-        assistant_reply = ""
-        if stream:
-            for chunk in completion:
-                delta = chunk.choices[0].delta.content or ""
-                print(delta, end="")
-                assistant_reply += delta
-        else:
-            assistant_reply = completion.choices[0].message.content
-            print(assistant_reply)
+#         assistant_reply = ""
+#         if stream:
+#             for chunk in completion:
+#                 delta = chunk.choices[0].delta.content or ""
+#                 print(delta, end="")
+#                 assistant_reply += delta
+#         else:
+#             assistant_reply = completion.choices[0].message.content
+#             print(assistant_reply)
 
-        # Save assistant reply
-        self.messages.append({"role": "assistant", "content": assistant_reply})
+#         # Save assistant reply
+#         self.messages.append({"role": "assistant", "content": assistant_reply})
 
-        return assistant_reply
+#         return assistant_reply
 
-    def reset_conversation(self):
-        """Reset conversation memory to system prompt only."""
-        self.messages = [{"role": "system", "content": self.system_prompt}]
+#     def reset_conversation(self):
+#         """Reset conversation memory to system prompt only."""
+#         self.messages = [{"role": "system", "content": self.system_prompt}]
