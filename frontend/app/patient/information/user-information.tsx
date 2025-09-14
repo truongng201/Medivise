@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useApi } from "@/hooks/use-api";
+import { useToast } from "@/hooks/use-toast";
 import {
   Card,
   CardContent,
@@ -59,13 +61,19 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { headers } from "next/headers";
 
 interface UserInformationProps {
   user: any;
-  // onUpdateUser: (user: any) => void
+  authData: any;
+  setPatientInfo: (info: any) => void;
 }
 
-export default function UserInformation({ user }: UserInformationProps) {
+export default function UserInformation({
+  user,
+  authData,
+  setPatientInfo,
+}: UserInformationProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
@@ -80,6 +88,10 @@ export default function UserInformation({ user }: UserInformationProps) {
   const [requestSpecialty, setRequestSpecialty] = useState("");
   const [requestReason, setRequestReason] = useState("");
   const [requestUrgency, setRequestUrgency] = useState("routine");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const { post } = useApi({ role: "patient" });
+  const { toast } = useToast();
 
   // Mock data for assigned doctors
   const assignedDoctors = [
@@ -147,9 +159,110 @@ export default function UserInformation({ user }: UserInformationProps) {
     "04:00 PM",
   ];
 
-  const handleSave = () => {
-    // onUpdateUser(editedUser)
-    setIsEditing(false);
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      // Prepare the update data by comparing editedUser with original user
+      const updateData: any = {};
+      updateData.profile_picture_url = `https://api.dicebear.com/9.x/identicon/svg?seed=${editedUser.fullname}`; 
+
+      // Check for changes in basic info
+      if (editedUser.fullname !== user.fullname) {
+        updateData.fullname = editedUser.fullname;
+      }
+      if (editedUser.phone_number !== user.phone_number) {
+        updateData.phone_number = editedUser.phone_number;
+      }
+      if (editedUser.date_of_birth !== user.date_of_birth) {
+        updateData.date_of_birth = editedUser.date_of_birth;
+      }
+      if (editedUser.bio !== user.bio) {
+        updateData.bio = editedUser.bio;
+      }
+      if (editedUser.profile_picture_url !== user.profile_picture_url) {
+        updateData.profile_picture_url = editedUser.profile_picture_url;
+      }
+
+      // Check for changes in medical info
+      if (editedUser.medical_history !== user.medical_history) {
+        updateData.medical_history = editedUser.medical_history;
+      }
+      if (editedUser.allergies !== user.allergies) {
+        updateData.allergies = editedUser.allergies;
+      }
+      if (editedUser.current_medications !== user.current_medications) {
+        updateData.current_medications = editedUser.current_medications;
+      }
+
+      // Check for changes in health metrics
+      if (editedUser.gender !== user.gender) {
+        updateData.gender = editedUser.gender;
+      }
+      if (editedUser.race !== user.race) {
+        updateData.race = editedUser.race;
+      }
+      if (editedUser.ethnicity !== user.ethnicity) {
+        updateData.ethnicity = editedUser.ethnicity;
+      }
+      if (editedUser.tobacco_smoking_status !== user.tobacco_smoking_status) {
+        updateData.tobacco_smoking_status = editedUser.tobacco_smoking_status;
+      }
+      if (editedUser.pain_severity !== user.pain_severity) {
+        if(editedUser.pain_severity === "none"){
+          updateData.pain_severity = 1.0;
+        } else if(editedUser.pain_severity === "mild"){
+          updateData.pain_severity = 2.0;
+        } else if(editedUser.pain_severity === "moderate"){
+          updateData.pain_severity = 3.0;
+        } else if(editedUser.pain_severity === "severe"){
+          updateData.pain_severity = 4.0;
+        }
+      }
+      if (editedUser.bmi !== user.bmi) {
+        updateData.bmi = parseFloat(editedUser.bmi) || null;
+      }
+
+      // Only make API call if there are changes
+      if (Object.keys(updateData).length > 0) {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/patient/update_patient_info`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: authData?.access_token || "",
+            },
+            body: JSON.stringify(updateData),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setPatientInfo(editedUser);
+        }
+
+        toast({
+          title: "Success",
+          description: "Your information has been updated successfully.",
+        });
+      } else {
+        toast({
+          title: "No Changes",
+          description: "No changes were made to your information.",
+        });
+      }
+
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating patient info:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update your information. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleContactDoctor = () => {
@@ -201,13 +314,14 @@ export default function UserInformation({ user }: UserInformationProps) {
               <Button
                 variant={isEditing ? "default" : "outline"}
                 onClick={isEditing ? handleSave : () => setIsEditing(true)}
+                disabled={isSaving}
               >
                 {isEditing ? (
                   <Save className="h-4 w-4 mr-2" />
                 ) : (
                   <Edit className="h-4 w-4 mr-2" />
                 )}
-                {isEditing ? "Save" : "Edit"}
+                {isSaving ? "Saving..." : isEditing ? "Save" : "Edit"}
               </Button>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -255,21 +369,10 @@ export default function UserInformation({ user }: UserInformationProps) {
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  {isEditing ? (
-                    <Input
-                      id="email"
-                      type="email"
-                      value={editedUser.email}
-                      onChange={(e) =>
-                        setEditedUser({ ...editedUser, email: e.target.value })
-                      }
-                    />
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4 text-gray-500" />
-                      <span>{user?.email}</span>
-                    </div>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    <Mail className="h-4 w-4 text-gray-500" />
+                    <span>{user?.email}</span>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -401,9 +504,12 @@ export default function UserInformation({ user }: UserInformationProps) {
                   <Label htmlFor="tobacco">Tobacco Smoking Status</Label>
                   {isEditing ? (
                     <Select
-                      value={editedUser.tobacco || ""}
+                      value={editedUser.tobacco_smoking_status || ""}
                       onValueChange={(val) =>
-                        setEditedUser({ ...editedUser, tobacco: val })
+                        setEditedUser({
+                          ...editedUser,
+                          tobacco_smoking_status: val,
+                        })
                       }
                     >
                       <SelectTrigger id="tobacco">
@@ -420,7 +526,9 @@ export default function UserInformation({ user }: UserInformationProps) {
                   ) : (
                     <div className="flex items-center space-x-2">
                       <User className="h-4 w-4 text-gray-500" />
-                      <span>{user?.tobacco || "Not provided"}</span>
+                      <span>
+                        {user?.tobacco_smoking_status || "Not provided"}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -429,9 +537,9 @@ export default function UserInformation({ user }: UserInformationProps) {
                   <Label htmlFor="pain">Pain Severity</Label>
                   {isEditing ? (
                     <Select
-                      value={editedUser.pain || ""}
+                      value={editedUser.pain_severity || ""}
                       onValueChange={(val) =>
-                        setEditedUser({ ...editedUser, pain: val })
+                        setEditedUser({ ...editedUser, pain_severity: val })
                       }
                     >
                       <SelectTrigger id="pain">
@@ -447,7 +555,7 @@ export default function UserInformation({ user }: UserInformationProps) {
                   ) : (
                     <div className="flex items-center space-x-2">
                       <User className="h-4 w-4 text-gray-500" />
-                      <span>{user?.pain || "Not provided"}</span>
+                      <span>{user?.pain_severity == 0 ? "None" : user?.pain_severity == 1 ? "Mild" : user?.pain_severity == 2 ? "Moderate" : user?.pain_severity == 3 ? "Severe" : "Not provided"}</span>
                     </div>
                   )}
                 </div>
@@ -471,6 +579,31 @@ export default function UserInformation({ user }: UserInformationProps) {
                   )}
                 </div>
               </div>
+
+              {/* Bio Section */}
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                {isEditing ? (
+                  <Textarea
+                    id="bio"
+                    placeholder="Tell us about yourself..."
+                    value={editedUser.bio || ""}
+                    onChange={(e) =>
+                      setEditedUser({
+                        ...editedUser,
+                        bio: e.target.value,
+                      })
+                    }
+                    className="min-h-[100px]"
+                  />
+                ) : (
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    <span className="text-gray-700">
+                      {user?.bio || "No bio provided"}
+                    </span>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -484,38 +617,79 @@ export default function UserInformation({ user }: UserInformationProps) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Allergies</h3>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-gray-500">
-                      {user?.allergies?.join(", ") || "No known allergies"}
-                    </span>
-                  </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="medical_history">Medical History</Label>
+                  {isEditing ? (
+                    <Textarea
+                      id="medical_history"
+                      placeholder="Describe your medical history..."
+                      value={editedUser.medical_history || ""}
+                      onChange={(e) =>
+                        setEditedUser({
+                          ...editedUser,
+                          medical_history: e.target.value,
+                        })
+                      }
+                      className="min-h-[100px]"
+                    />
+                  ) : (
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      <span className="text-gray-700">
+                        {user?.medical_history || "No medical history provided"}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Current Medications</h3>
-                  <div className="space-y-2">
-                    {Array.isArray(user?.current_medications) &&
-                    user?.current_medications.length > 0 ? (
-                      user?.current_medications.map(
-                        (medication: any, index: number) => (
-                          <div
-                            key={index}
-                            className="flex justify-between items-center p-2 bg-gray-50 rounded"
-                          >
-                            <span>{medication.name}</span>
-                            <Badge variant="outline">{medication.dosage}</Badge>
-                          </div>
-                        )
-                      )
-                    ) : (
-                      <span className="text-gray-500">
-                        No current medications
+                <div className="space-y-2">
+                  <Label htmlFor="allergies">Allergies</Label>
+                  {isEditing ? (
+                    <Textarea
+                      id="allergies"
+                      placeholder="List your allergies (e.g., Peanuts, Shellfish, Penicillin)..."
+                      value={editedUser.allergies || ""}
+                      onChange={(e) =>
+                        setEditedUser({
+                          ...editedUser,
+                          allergies: e.target.value,
+                        })
+                      }
+                      className="min-h-[80px]"
+                    />
+                  ) : (
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      <span className="text-gray-700">
+                        {user?.allergies || "No known allergies"}
                       </span>
-                    )}
-                  </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="current_medications">
+                    Current Medications
+                  </Label>
+                  {isEditing ? (
+                    <Textarea
+                      id="current_medications"
+                      placeholder="List your current medications with dosages..."
+                      value={editedUser.current_medications || ""}
+                      onChange={(e) =>
+                        setEditedUser({
+                          ...editedUser,
+                          current_medications: e.target.value,
+                        })
+                      }
+                      className="min-h-[80px]"
+                    />
+                  ) : (
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      <span className="text-gray-700">
+                        {user?.current_medications || "No current medications"}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>

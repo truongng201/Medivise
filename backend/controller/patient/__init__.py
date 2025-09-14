@@ -1,1 +1,2 @@
 from .GetPatientInfoController import GetPatientInfoController
+from .UpdatePatientInfoController import UpdatePatientInfoController

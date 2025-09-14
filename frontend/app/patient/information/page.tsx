@@ -59,5 +59,5 @@ export default function PatientInformation() {
       )
     }
 
-  return <UserInformation user={patientInfo}/>
+  return <UserInformation user={patientInfo} authData={authData} setPatientInfo={setPatientInfo} />
 }

@@ -1,1 +1,2 @@
 from .GetPatientInfoQuery import GetPatientInfoQuery
+from .UpdatePatientInfoQuery import UpdatePatientInfoQuery
