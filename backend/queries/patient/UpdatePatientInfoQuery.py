@@ -102,7 +102,7 @@ class UpdatePatientInfoQuery(QueryBase):
             set_clauses.append("recorded_time = %s")
             params.append(datetime.now())
             params.append(patient_id)
-            
+            print(query)
             query = f"""
                 UPDATE patient_health_metrics 
                 SET {', '.join(set_clauses)}

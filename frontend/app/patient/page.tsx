@@ -59,5 +59,5 @@ export default function PatientDashboard() {
       </div>
     )
   }
-  return <Dashboard user={patientInfo || authData} />
+  return <Dashboard user={patientInfo} authData={authData} />
 }
