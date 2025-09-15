@@ -1,2 +1,3 @@
 from .GetPatientInfoController import GetPatientInfoController
 from .UpdatePatientInfoController import UpdatePatientInfoController
+from .GetRecommendationController import GetRecommendationController

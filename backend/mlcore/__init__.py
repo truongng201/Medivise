@@ -1,1 +1,1 @@
-from .mlcore import MLCore
+from .mlcore import MLCore, ClinicalAssistant

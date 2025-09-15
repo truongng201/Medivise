@@ -1,2 +1,2 @@
-from .prediction import PredictPayload, FeatureRecord
+from .prediction import PredictPayload, FeatureRecord, RecommendationPayload
 from .auth import *

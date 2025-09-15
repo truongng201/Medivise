@@ -1,4 +1,4 @@
-from typing import Literal, Optional, List
+from typing import Literal, Optional, List, Any
 from pydantic import BaseModel, Field
 
 class FeatureRecord(BaseModel):
@@ -26,3 +26,7 @@ class FeatureRecord(BaseModel):
     
 class PredictPayload(BaseModel):
     records: List[FeatureRecord] = Field(..., description="List of patient feature records")
+    
+class RecommendationPayload(BaseModel):
+    model_prediction: Optional[Any]
+    patient_vitals: PredictPayload

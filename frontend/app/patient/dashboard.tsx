@@ -26,113 +26,131 @@ export default function Dashboard({ user, authData, onUserUpdate }: DashboardPro
   const [isSavingMetric, setIsSavingMetric] = useState(false);
   const [healthScore, setHealthScore] = useState<any>(null);
   const [isCalculatingScore, setIsCalculatingScore] = useState(false);
+  const [recommendations, setRecommendations] = useState<any>(null);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   
   const { post, loading } = useApi({ role: 'patient' });
   const { toast } = useToast();
 
-  // const initializeMLModel = async () => {
-  //   try {
-  //     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ml/v1/initialize_model`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         "Authorization": `${authData?.access_token || ""}`
-  //       },
-  //     });
+  // Helper functions for data mapping
+  const getMetricValue = (metricName: string, fallback: number) => {
+    const metric = healthMetrics.find(m => 
+      m?.name?.toLowerCase().replace(/\s+/g, '_') === metricName.toLowerCase().replace(/\s+/g, '_')
+    );
+    return metric?.value || user?.[metricName] || fallback;
+  };
 
-  //     if (!response.ok) {
-  //       throw new Error('Failed to initialize ML model');
-  //     }
+  const mapGender = (gender: string | undefined): "F" | "M" | "Other" => {
+    if (!gender) return "F";
+    const lowerGender = gender.toLowerCase();
+    if (lowerGender === "female" || lowerGender === "f") return "F";
+    if (lowerGender === "male" || lowerGender === "m") return "M";
+    return "Other";
+  };
 
-  //     const responseData = await response.json();
-  //     console.log('ML model initialized:', responseData);
-  //     return true;
-  //   } catch (error) {
-  //     console.error('Error initializing ML model:', error);
-  //     return false;
-  //   }
-  // };
+  const mapRace = (race: string | undefined): "asian" | "black" | "white" | "other" => {
+    if (!race) return "white";
+    const lowerRace = race.toLowerCase();
+    if (lowerRace.includes("asian")) return "asian";
+    if (lowerRace.includes("black") || lowerRace.includes("african")) return "black";
+    if (lowerRace.includes("white") || lowerRace.includes("caucasian")) return "white";
+    return "other";
+  };
 
-  // const initializeMLModelAndCalculateScore = async () => {
-  //   const initialized = await initializeMLModel();
-  //   if (initialized) {
-  //     // Wait a moment for model to be ready
-  //     setTimeout(() => {
-  //       calculateHealthScore();
-  //     }, 1000);
-  //   }
-  // };
+  const mapEthnicity = (ethnicity: string | undefined): "hispanic" | "nonhispanic" => {
+    if (!ethnicity) return "nonhispanic";
+    const lowerEthnicity = ethnicity.toLowerCase();
+    return lowerEthnicity.includes("hispanic") ? "hispanic" : "nonhispanic";
+  };
+
+  const mapSmokingStatus = (status: string | undefined): "current" | "former" | "never" => {
+    if (!status) return "never";
+    const lowerStatus = status.toLowerCase();
+    if (lowerStatus.includes("current") || lowerStatus.includes("yes")) return "current";
+    if (lowerStatus.includes("former") || lowerStatus.includes("quit")) return "former";
+    return "never";
+  };
+
+  const createPredictionPayload = () => {
+    return {
+      records: [{
+        gender: mapGender(user?.gender),
+        race: mapRace(user?.race),
+        ethnicity: mapEthnicity(user?.ethnicity),
+        tobacco_smoking_status: mapSmokingStatus(user?.tobacco_smoking_status),
+        pain_severity: getMetricValue('pain_severity', 0),
+        age: user?.age || 0,
+        bmi: user?.bmi || 0,
+        calcium: getMetricValue('calcium', 9.5),
+        carbon_dioxide: getMetricValue('carbon_dioxide', 25.5),
+        chloride: getMetricValue('chloride', 101),
+        creatinine: getMetricValue('creatinine', 0.97),
+        diastolic_bp: getMetricValue('diastolic_bp', 70),
+        glucose: getMetricValue('glucose', 84.5),
+        heart_rate: getMetricValue('heart_rate', 80),
+        potassium: getMetricValue('potassium', 4.25),
+        respiratory_rate: getMetricValue('respiratory_rate', 16),
+        sodium: getMetricValue('sodium', 140),
+        systolic_bp: getMetricValue('systolic_bp', 105),
+        urea_nitrogen: getMetricValue('urea_nitrogen', 13.5)
+      }]
+    };
+  };
+
+  const getRecommendations = async (healthScoreResult: any, patientVitals: any) => {
+    setIsLoadingRecommendations(true);
+    try {
+      const recommendationPayload = {
+        model_prediction: healthScoreResult,
+        patient_vitals: patientVitals
+      };
+
+      console.log('Sending recommendation payload:', recommendationPayload);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/patient/get_recommendation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          "Authorization": `${authData?.access_token || ""}`
+        },
+        body: JSON.stringify(recommendationPayload),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get recommendations');
+      }
+
+      const responseData = await response.json();
+      console.log('Recommendations response:', responseData);
+
+      if (responseData.status === 'success') {
+        setRecommendations(responseData.data);
+        
+        toast({
+          title: "Success",
+          description: "AI recommendations generated successfully!",
+        });
+      } else {
+        throw new Error('Invalid response from recommendation service');
+      }
+
+    } catch (error) {
+      console.error('Error getting recommendations:', error);
+      toast({
+        title: "Error",
+        description: "Failed to get AI recommendations. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingRecommendations(false);
+    }
+  };
 
   const calculateHealthScore = async () => {
     setIsCalculatingScore(true);
     try {
-      // Helper function to get metric value by name
-      const getMetricValue = (metricName: string, fallback: number) => {
-        const metric = healthMetrics.find(m => 
-          m?.name?.toLowerCase().replace(/\s+/g, '_') === metricName.toLowerCase().replace(/\s+/g, '_')
-        );
-        return metric?.value || user?.[metricName] || fallback;
-      };
-
-      // Map frontend gender values to backend expected format
-      const mapGender = (gender: string | undefined): "F" | "M" | "Other" => {
-        if (!gender) return "F";
-        const lowerGender = gender.toLowerCase();
-        if (lowerGender === "female" || lowerGender === "f") return "F";
-        if (lowerGender === "male" || lowerGender === "m") return "M";
-        return "Other";
-      };
-      
-      const userGender = mapGender(user?.gender);
-
-      // Map other categorical fields to match backend expected format
-      const mapRace = (race: string | undefined): "asian" | "black" | "white" | "other" => {
-        if (!race) return "white";
-        const lowerRace = race.toLowerCase();
-        if (lowerRace.includes("asian")) return "asian";
-        if (lowerRace.includes("black") || lowerRace.includes("african")) return "black";
-        if (lowerRace.includes("white") || lowerRace.includes("caucasian")) return "white";
-        return "other";
-      };
-
-      const mapEthnicity = (ethnicity: string | undefined): "hispanic" | "nonhispanic" => {
-        if (!ethnicity) return "nonhispanic";
-        const lowerEthnicity = ethnicity.toLowerCase();
-        return lowerEthnicity.includes("hispanic") ? "hispanic" : "nonhispanic";
-      };
-
-      const mapSmokingStatus = (status: string | undefined): "current" | "former" | "never" => {
-        if (!status) return "never";
-        const lowerStatus = status.toLowerCase();
-        if (lowerStatus.includes("current") || lowerStatus.includes("yes")) return "current";
-        if (lowerStatus.includes("former") || lowerStatus.includes("quit")) return "former";
-        return "never";
-      };
-
       // Prepare data for ML prediction
-      const predictionPayload = {
-        records: [{
-          gender: userGender,
-          race: mapRace(user?.race),
-          ethnicity: mapEthnicity(user?.ethnicity),
-          tobacco_smoking_status: mapSmokingStatus(user?.tobacco_smoking_status),
-          pain_severity: getMetricValue('pain_severity', 0),
-          age: user?.age || 0,
-          bmi: user?.bmi || 0,
-          calcium: getMetricValue('calcium', 9.5),
-          carbon_dioxide: getMetricValue('carbon_dioxide', 25.5),
-          chloride: getMetricValue('chloride', 101),
-          creatinine: getMetricValue('creatinine', 0.97),
-          diastolic_bp: getMetricValue('diastolic_bp', 70),
-          glucose: getMetricValue('glucose', 84.5),
-          heart_rate: getMetricValue('heart_rate', 80),
-          potassium: getMetricValue('potassium', 4.25),
-          respiratory_rate: getMetricValue('respiratory_rate', 16),
-          sodium: getMetricValue('sodium', 140),
-          systolic_bp: getMetricValue('systolic_bp', 105),
-          urea_nitrogen: getMetricValue('urea_nitrogen', 13.5)
-        }]
-      };
+      const predictionPayload = createPredictionPayload();
 
       console.log('Sending prediction payload:', predictionPayload);
 
@@ -155,6 +173,9 @@ export default function Dashboard({ user, authData, onUserUpdate }: DashboardPro
       if (responseData.status === 'success' && responseData.data?.results?.length > 0) {
         const result = responseData.data.results[0];
         setHealthScore(result);
+        
+        // Auto-fetch recommendations after getting health score
+        getRecommendations(result, predictionPayload);
         
         toast({
           title: "Success",
@@ -549,35 +570,6 @@ export default function Dashboard({ user, authData, onUserUpdate }: DashboardPro
                     <p className="text-red-600">{Math.round((healthScore.proba_high || 0) * 100)}%</p>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="font-medium text-gray-700">Current Status:</p>
-                    <ul className="text-gray-600 mt-1">
-                      <li>• Health Score: {healthScore.health_score || healthScore.risk_level}</li>
-                      <li>• Score Value: {(healthScore.score_number * 100).toFixed(1)}/100</li>
-                      <li>• Assessment: AI-based prediction</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-700">Recommendations:</p>
-                    <ul className="text-gray-600 mt-1">
-                      {healthScore.health_score === 'good' ? (
-                        <>
-                          <li>• Continue current lifestyle</li>
-                          <li>• Regular health monitoring</li>
-                          <li>• Maintain healthy habits</li>
-                        </>
-                      ) : (
-                        <>
-                          <li>• Consult healthcare provider</li>
-                          <li>• Monitor vital signs closely</li>
-                          <li>• Follow medical guidance</li>
-                        </>
-                      )}
-                    </ul>
-                  </div>
-                </div>
               </div>
             </div>
           ) : (
@@ -587,6 +579,131 @@ export default function Dashboard({ user, authData, onUserUpdate }: DashboardPro
                 <p className="text-gray-500 mb-4">No health score calculated yet</p>
                 <p className="text-sm text-gray-400">
                   Click "Calculate Score" to generate your health assessment based on current metrics
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* AI Recommendations */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>AI Clinical Recommendations</CardTitle>
+              <CardDescription>
+                AI-generated suggestions based on your health score and vitals
+              </CardDescription>
+            </div>
+            {healthScore && (
+              <Button 
+                onClick={() => getRecommendations(healthScore, createPredictionPayload())}
+                disabled={isLoadingRecommendations}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                {isLoadingRecommendations ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4" />
+                    Get New Recommendations
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {recommendations ? (
+            <div className="space-y-6">
+              {/* Disclaimer */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-medium text-yellow-800 mb-1">
+                      Important Medical Disclaimer
+                    </h4>
+                    <p className="text-sm text-yellow-700">
+                      These are AI-generated suggestions and must be reviewed by a licensed physician 
+                      before any medical decisions are made. This information is not a substitute for 
+                      professional medical advice, diagnosis, or treatment.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Suggested Actions */}
+              {recommendations.suggested_actions && recommendations.suggested_actions.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                    Suggested Actions
+                  </h3>
+                  <ul className="space-y-2">
+                    {recommendations.suggested_actions.map((action: string, index: number) => (
+                      <li key={index} className="flex items-start">
+                        <span className="inline-block w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                        <span className="text-gray-700">{action}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Monitoring Requirements */}
+              {recommendations.monitoring_requirements && recommendations.monitoring_requirements.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <RefreshCw className="h-5 w-5 text-blue-600 mr-2" />
+                    Monitoring Requirements
+                  </h3>
+                  <ul className="space-y-2">
+                    {recommendations.monitoring_requirements.map((requirement: string, index: number) => (
+                      <li key={index} className="flex items-start">
+                        <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                        <span className="text-gray-700">{requirement}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Red Flags */}
+              {recommendations.red_flags && recommendations.red_flags.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
+                    Red Flags to Watch For
+                  </h3>
+                  <ul className="space-y-2">
+                    {recommendations.red_flags.map((flag: string, index: number) => (
+                      <li key={index} className="flex items-start">
+                        <span className="inline-block w-2 h-2 bg-red-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                        <span className="text-gray-700">{flag}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="text-gray-400 mb-4">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-2" />
+                </div>
+                <p className="text-gray-500 mb-4">No AI recommendations available yet</p>
+                <p className="text-sm text-gray-400">
+                  {healthScore 
+                    ? "Click 'Get New Recommendations' to generate AI-powered health insights"
+                    : "Calculate your health score first to get personalized recommendations"
+                  }
                 </p>
               </div>
             </div>

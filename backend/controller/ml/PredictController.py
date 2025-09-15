@@ -46,13 +46,12 @@ class PredictController:
                 # Find proba_low and calculate score as 1 - proba_low
                 if probabilities is not None:
                     proba_cols = [cls.lower() for cls in self.ml_core.label_encoder.classes_]
-                    if "low" in proba_cols:
-                        low_idx = proba_cols.index("low")
-                        proba_low = float(probabilities[idx][low_idx])
-                        result["score_number"] = 1 - proba_low
-                        # Also include the original probabilities for reference
-                        for j, cls in enumerate(self.ml_core.label_encoder.classes_):
-                            result[f"proba_{cls.lower()}"] = float(probabilities[idx][j])
+                    for j, cls in enumerate(self.ml_core.label_encoder.classes_):
+                        result[f"proba_{cls.lower()}"] = float(probabilities[idx][j])
+                    if "high" in proba_cols:
+                        high_idx = proba_cols.index("high")
+                        proba_high = float(probabilities[idx][high_idx])
+                        result["score_number"] = 1 - proba_high
                     else:
                         result["score_number"] = 0.5  # Default fallback
                 else:
@@ -61,12 +60,12 @@ class PredictController:
                 result["health_score"] = "average"
                 if probabilities is not None:
                     proba_cols = [cls.lower() for cls in self.ml_core.label_encoder.classes_]
-                    if "moderate" in proba_cols:
-                        moderate_idx = proba_cols.index("moderate")
-                        proba_moderate = float(probabilities[idx][moderate_idx])
-                        result["score_number"] = 1 - proba_moderate
-                        for j, cls in enumerate(self.ml_core.label_encoder.classes_):
-                            result[f"proba_{cls.lower()}"] = float(probabilities[idx][j])
+                    for j, cls in enumerate(self.ml_core.label_encoder.classes_):
+                        result[f"proba_{cls.lower()}"] = float(probabilities[idx][j])
+                    if "high" in proba_cols:
+                        high = proba_cols.index("high")
+                        proba_high = float(probabilities[idx][high])
+                        result["score_number"] = 1 - proba_high
                     else:
                         result["score_number"] = 0.5  # Default fallback
                 else:
@@ -75,12 +74,12 @@ class PredictController:
                 result["health_score"] = "poor"
                 if probabilities is not None:
                     proba_cols = [cls.lower() for cls in self.ml_core.label_encoder.classes_]
+                    for j, cls in enumerate(self.ml_core.label_encoder.classes_):
+                        result[f"proba_{cls.lower()}"] = float(probabilities[idx][j])
                     if "high" in proba_cols:
                         high_idx = proba_cols.index("high")
                         proba_high = float(probabilities[idx][high_idx])
                         result["score_number"] = 1 - proba_high
-                        for j, cls in enumerate(self.ml_core.label_encoder.classes_):
-                            result[f"proba_{cls.lower()}"] = float(probabilities[idx][j])
                     else:
                         result["score_number"] = 0.5  # Default fallback
                 else:

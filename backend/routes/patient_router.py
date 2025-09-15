@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from utils import standard_response, patient_login_required
-from controller import GetPatientInfoController, UpdatePatientInfoController
-from models.auth import UpdatePatientInfoModel
+from controller import GetPatientInfoController, UpdatePatientInfoController, GetRecommendationController
+from models import UpdatePatientInfoModel, RecommendationPayload
 
 patient_router = APIRouter()
 
@@ -17,6 +17,13 @@ def get_patient_info(account_info=Depends(patient_login_required)):
 @standard_response
 def update_patient_info(update_data: UpdatePatientInfoModel, account_info=Depends(patient_login_required)):
     controller = UpdatePatientInfoController(account_info, update_data.model_dump(exclude_unset=True))
+    response = controller.execute()
+    return response
+
+@patient_router.post("/get_recommendation")
+@standard_response
+def get_recommendation(payload: RecommendationPayload, account_info=Depends(patient_login_required)):
+    controller = GetRecommendationController(payload)
     response = controller.execute()
     return response
 
