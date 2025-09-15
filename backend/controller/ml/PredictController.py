@@ -29,18 +29,71 @@ class PredictController:
         labels = self.ml_core.label_encoder.inverse_transform(predictions)
         
         results = []
-        for idx, label in enumerate(labels):
-            results.append({
-                "record_index": idx,
-                "risk_level": label
-            })
-            
+        
+        # Get probabilities first
+        probabilities = None
         if hasattr(self.model, "predict_proba"):
             probabilities = self.model.predict_proba(preprocessed_df)
-            proba_cols = [f"proba_{cls.lower()}" for cls in self.ml_core.label_encoder.classes_]
-            for i, row in enumerate(probabilities):
-                for j, col in enumerate(proba_cols):
-                    results[i][col] = float(row[j])
+            
+        for idx, label in enumerate(labels):
+            result = {
+                "record_index": idx,
+            }
+            
+            # Map risk level to health score and calculate score number
+            if label.lower() == "low":
+                result["health_score"] = "good"
+                # Find proba_low and calculate score as 1 - proba_low
+                if probabilities is not None:
+                    proba_cols = [cls.lower() for cls in self.ml_core.label_encoder.classes_]
+                    if "low" in proba_cols:
+                        low_idx = proba_cols.index("low")
+                        proba_low = float(probabilities[idx][low_idx])
+                        result["score_number"] = 1 - proba_low
+                        # Also include the original probabilities for reference
+                        for j, cls in enumerate(self.ml_core.label_encoder.classes_):
+                            result[f"proba_{cls.lower()}"] = float(probabilities[idx][j])
+                    else:
+                        result["score_number"] = 0.5  # Default fallback
+                else:
+                    result["score_number"] = 0.5  # Default if no probabilities
+            elif label.lower() == "moderate":
+                result["health_score"] = "average"
+                if probabilities is not None:
+                    proba_cols = [cls.lower() for cls in self.ml_core.label_encoder.classes_]
+                    if "moderate" in proba_cols:
+                        moderate_idx = proba_cols.index("moderate")
+                        proba_moderate = float(probabilities[idx][moderate_idx])
+                        result["score_number"] = 1 - proba_moderate
+                        for j, cls in enumerate(self.ml_core.label_encoder.classes_):
+                            result[f"proba_{cls.lower()}"] = float(probabilities[idx][j])
+                    else:
+                        result["score_number"] = 0.5  # Default fallback
+                else:
+                    result["score_number"] = 0.5  # Default if no probabilities
+            elif label.lower() == "high":
+                result["health_score"] = "poor"
+                if probabilities is not None:
+                    proba_cols = [cls.lower() for cls in self.ml_core.label_encoder.classes_]
+                    if "high" in proba_cols:
+                        high_idx = proba_cols.index("high")
+                        proba_high = float(probabilities[idx][high_idx])
+                        result["score_number"] = 1 - proba_high
+                        for j, cls in enumerate(self.ml_core.label_encoder.classes_):
+                            result[f"proba_{cls.lower()}"] = float(probabilities[idx][j])
+                    else:
+                        result["score_number"] = 0.5  # Default fallback
+                else:
+                    result["score_number"] = 0.5  # Default if no probabilities
+            else:
+                # For non-low risk levels, keep original risk_level format
+                # You can extend this logic for moderate/high risk levels
+                result["risk_level"] = label
+                if probabilities is not None:
+                    for j, cls in enumerate(self.ml_core.label_encoder.classes_):
+                        result[f"proba_{cls.lower()}"] = float(probabilities[idx][j])
+            
+            results.append(result)
         
         return {
             "results": results

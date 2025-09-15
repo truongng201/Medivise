@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -24,9 +24,157 @@ export default function Dashboard({ user, authData, onUserUpdate }: DashboardPro
   const [isUpdateAllDialogOpen, setIsUpdateAllDialogOpen] = useState(false);
   const [allMetricsValues, setAllMetricsValues] = useState<{ [key: number]: string }>({});
   const [isSavingMetric, setIsSavingMetric] = useState(false);
+  const [healthScore, setHealthScore] = useState<any>(null);
+  const [isCalculatingScore, setIsCalculatingScore] = useState(false);
   
   const { post, loading } = useApi({ role: 'patient' });
   const { toast } = useToast();
+
+  // const initializeMLModel = async () => {
+  //   try {
+  //     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ml/v1/initialize_model`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         "Authorization": `${authData?.access_token || ""}`
+  //       },
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error('Failed to initialize ML model');
+  //     }
+
+  //     const responseData = await response.json();
+  //     console.log('ML model initialized:', responseData);
+  //     return true;
+  //   } catch (error) {
+  //     console.error('Error initializing ML model:', error);
+  //     return false;
+  //   }
+  // };
+
+  // const initializeMLModelAndCalculateScore = async () => {
+  //   const initialized = await initializeMLModel();
+  //   if (initialized) {
+  //     // Wait a moment for model to be ready
+  //     setTimeout(() => {
+  //       calculateHealthScore();
+  //     }, 1000);
+  //   }
+  // };
+
+  const calculateHealthScore = async () => {
+    setIsCalculatingScore(true);
+    try {
+      // Helper function to get metric value by name
+      const getMetricValue = (metricName: string, fallback: number) => {
+        const metric = healthMetrics.find(m => 
+          m?.name?.toLowerCase().replace(/\s+/g, '_') === metricName.toLowerCase().replace(/\s+/g, '_')
+        );
+        return metric?.value || user?.[metricName] || fallback;
+      };
+
+      // Map frontend gender values to backend expected format
+      const mapGender = (gender: string | undefined): "F" | "M" | "Other" => {
+        if (!gender) return "F";
+        const lowerGender = gender.toLowerCase();
+        if (lowerGender === "female" || lowerGender === "f") return "F";
+        if (lowerGender === "male" || lowerGender === "m") return "M";
+        return "Other";
+      };
+      
+      const userGender = mapGender(user?.gender);
+
+      // Map other categorical fields to match backend expected format
+      const mapRace = (race: string | undefined): "asian" | "black" | "white" | "other" => {
+        if (!race) return "white";
+        const lowerRace = race.toLowerCase();
+        if (lowerRace.includes("asian")) return "asian";
+        if (lowerRace.includes("black") || lowerRace.includes("african")) return "black";
+        if (lowerRace.includes("white") || lowerRace.includes("caucasian")) return "white";
+        return "other";
+      };
+
+      const mapEthnicity = (ethnicity: string | undefined): "hispanic" | "nonhispanic" => {
+        if (!ethnicity) return "nonhispanic";
+        const lowerEthnicity = ethnicity.toLowerCase();
+        return lowerEthnicity.includes("hispanic") ? "hispanic" : "nonhispanic";
+      };
+
+      const mapSmokingStatus = (status: string | undefined): "current" | "former" | "never" => {
+        if (!status) return "never";
+        const lowerStatus = status.toLowerCase();
+        if (lowerStatus.includes("current") || lowerStatus.includes("yes")) return "current";
+        if (lowerStatus.includes("former") || lowerStatus.includes("quit")) return "former";
+        return "never";
+      };
+
+      // Prepare data for ML prediction
+      const predictionPayload = {
+        records: [{
+          gender: userGender,
+          race: mapRace(user?.race),
+          ethnicity: mapEthnicity(user?.ethnicity),
+          tobacco_smoking_status: mapSmokingStatus(user?.tobacco_smoking_status),
+          pain_severity: getMetricValue('pain_severity', 0),
+          age: user?.age || 0,
+          bmi: user?.bmi || 0,
+          calcium: getMetricValue('calcium', 9.5),
+          carbon_dioxide: getMetricValue('carbon_dioxide', 25.5),
+          chloride: getMetricValue('chloride', 101),
+          creatinine: getMetricValue('creatinine', 0.97),
+          diastolic_bp: getMetricValue('diastolic_bp', 70),
+          glucose: getMetricValue('glucose', 84.5),
+          heart_rate: getMetricValue('heart_rate', 80),
+          potassium: getMetricValue('potassium', 4.25),
+          respiratory_rate: getMetricValue('respiratory_rate', 16),
+          sodium: getMetricValue('sodium', 140),
+          systolic_bp: getMetricValue('systolic_bp', 105),
+          urea_nitrogen: getMetricValue('urea_nitrogen', 13.5)
+        }]
+      };
+
+      console.log('Sending prediction payload:', predictionPayload);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ml/v1/predict`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          "Authorization": `${authData?.access_token || ""}`
+        },
+        body: JSON.stringify(predictionPayload),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to calculate health score');
+      }
+
+      const responseData = await response.json();
+      console.log('Prediction response:', responseData);
+
+      if (responseData.status === 'success' && responseData.data?.results?.length > 0) {
+        const result = responseData.data.results[0];
+        setHealthScore(result);
+        
+        toast({
+          title: "Success",
+          description: "Health score calculated successfully!",
+        });
+      } else {
+        throw new Error('Invalid response from prediction service');
+      }
+
+    } catch (error) {
+      console.error('Error calculating health score:', error);
+      toast({
+        title: "Error",
+        description: "Failed to calculate health score. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCalculatingScore(false);
+    }
+  };
 
   const refreshUserInfo = async () => {
     try {
@@ -114,6 +262,11 @@ export default function Dashboard({ user, authData, onUserUpdate }: DashboardPro
 
         // Refresh user info to get updated data
         await refreshUserInfo();
+
+        // Recalculate health score with updated metrics
+        setTimeout(() => {
+          calculateHealthScore();
+        }, 1000);
 
         toast({
           title: "Success",
@@ -205,6 +358,11 @@ export default function Dashboard({ user, authData, onUserUpdate }: DashboardPro
       // Refresh user info to get updated data
       await refreshUserInfo();
 
+      // Recalculate health score with updated metrics
+      setTimeout(() => {
+        calculateHealthScore();
+      }, 1000);
+
       toast({
         title: "Success",
         description: "All health metrics have been updated successfully.",
@@ -245,13 +403,33 @@ export default function Dashboard({ user, authData, onUserUpdate }: DashboardPro
             return vietnamTime.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'medium' }) + ' (UTC+7)';
           })() : "No updates available"}</p>
         </div>
-        <Button 
-          onClick={handleUpdateAllMetrics}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Update All Values
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={calculateHealthScore}
+            disabled={isCalculatingScore}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            {isCalculatingScore ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Calculating...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4" />
+                Refresh Score
+              </>
+            )}
+          </Button>
+          <Button 
+            onClick={handleUpdateAllMetrics}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Update All Values
+          </Button>
+        </div>
       </div>
 
       {/* Metrics Grid */}
@@ -309,38 +487,110 @@ export default function Dashboard({ user, authData, onUserUpdate }: DashboardPro
       {/* Overall Health Score */}
       <Card>
         <CardHeader>
-          <CardTitle>Overall Health Score</CardTitle>
-          <CardDescription>Based on your recent health metrics and recommendations</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Overall Health Score</CardTitle>
+              <CardDescription>Based on your recent health metrics and AI analysis</CardDescription>
+            </div>
+            <Button 
+              onClick={calculateHealthScore}
+              disabled={isCalculatingScore}
+              className="flex items-center gap-2"
+            >
+              {isCalculatingScore ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Calculating...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4" />
+                  Calculate Score
+                </>
+              )}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-6">
-            <div className="text-6xl font-bold text-slate-600">85/100</div>
-            <div className="flex-1">
-              <Progress value={85} className="h-4 mb-3" />
-              <p className="text-gray-700 mb-2">
-                Your health score is <strong className="text-slate-600">Good</strong>. Keep up with regular check-ups
-                and follow the recommendations.
-              </p>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="font-medium text-gray-700">Strengths:</p>
-                  <ul className="text-gray-600 mt-1">
-                    <li>• Excellent cholesterol levels</li>
-                    <li>• Good heart rate variability</li>
-                    <li>• Stable blood sugar</li>
-                  </ul>
+          {healthScore ? (
+            <div className="flex items-center space-x-6">
+              <div className="text-6xl font-bold text-slate-600">
+                {Math.round((healthScore.score_number || 0.5) * 100)}/100
+              </div>
+              <div className="flex-1">
+                <Progress value={(healthScore.score_number || 0.5) * 100} className="h-4 mb-3" />
+                <p className="text-gray-700 mb-2">
+                  Your health status is{" "}
+                  <strong className={`${
+                    healthScore.health_score === 'good' ? 'text-green-600' : 
+                    healthScore.risk_level === 'moderate' ? 'text-yellow-600' : 
+                    'text-red-600'
+                  }`}>
+                    {healthScore.health_score || healthScore.risk_level || 'Unknown'}
+                  </strong>
+                  {healthScore.health_score === 'good' 
+                    ? '. Keep up with regular check-ups and follow the recommendations.' 
+                    : '. Please consult with your healthcare provider for personalized advice.'
+                  }
+                </p>
+                
+                {/* Display prediction probabilities */}
+                <div className="grid grid-cols-3 gap-4 text-sm mb-4">
+                  <div className="text-center p-2 bg-green-50 rounded">
+                    <p className="font-medium text-green-700">Low Risk</p>
+                    <p className="text-green-600">{Math.round((healthScore.proba_low || 0) * 100)}%</p>
+                  </div>
+                  <div className="text-center p-2 bg-yellow-50 rounded">
+                    <p className="font-medium text-yellow-700">Moderate Risk</p>
+                    <p className="text-yellow-600">{Math.round((healthScore.proba_moderate || 0) * 100)}%</p>
+                  </div>
+                  <div className="text-center p-2 bg-red-50 rounded">
+                    <p className="font-medium text-red-700">High Risk</p>
+                    <p className="text-red-600">{Math.round((healthScore.proba_high || 0) * 100)}%</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-700">Areas for improvement:</p>
-                  <ul className="text-gray-600 mt-1">
-                    <li>• Monitor blood pressure</li>
-                    <li>• Maintain current weight</li>
-                    <li>• Regular exercise routine</li>
-                  </ul>
+
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="font-medium text-gray-700">Current Status:</p>
+                    <ul className="text-gray-600 mt-1">
+                      <li>• Health Score: {healthScore.health_score || healthScore.risk_level}</li>
+                      <li>• Score Value: {(healthScore.score_number * 100).toFixed(1)}/100</li>
+                      <li>• Assessment: AI-based prediction</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-700">Recommendations:</p>
+                    <ul className="text-gray-600 mt-1">
+                      {healthScore.health_score === 'good' ? (
+                        <>
+                          <li>• Continue current lifestyle</li>
+                          <li>• Regular health monitoring</li>
+                          <li>• Maintain healthy habits</li>
+                        </>
+                      ) : (
+                        <>
+                          <li>• Consult healthcare provider</li>
+                          <li>• Monitor vital signs closely</li>
+                          <li>• Follow medical guidance</li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-gray-400 mb-2">--/100</div>
+                <p className="text-gray-500 mb-4">No health score calculated yet</p>
+                <p className="text-sm text-gray-400">
+                  Click "Calculate Score" to generate your health assessment based on current metrics
+                </p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
