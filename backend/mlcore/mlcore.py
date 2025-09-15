@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 from typing import List
 from sklearn.preprocessing import LabelEncoder
-
+from groq import Groq
+import os
 from utils import BadRequestException
 
 class MLCore:
@@ -111,3 +112,73 @@ class MLCore:
         X = X.reindex(columns=feature_columns, fill_value=0.0)
         X = X.fillna(0.0)
         return X
+    
+class ClinicalAssistant:
+    def __init__(self, api_key=None, model="openai/gpt-oss-20b"):
+        self.api_key = os.getenv("GROQ_API_KEY")
+        print(self.api_key)
+        self.client = Groq(api_key=self.api_key)
+        self.model = model
+
+        # System prompt
+        self.system_prompt = """
+        You are a professional clinical assistant. Your role is to support clinicians by analyzing:
+
+        - Model prediction
+        - Patient vitals 
+
+        From these inputs, generate a structured response using EXACTLY this format:
+
+        **Clinical Assistant Recommendations**  
+        *(These are AI‑generated suggestions and must be reviewed by a licensed physician before any decisions are made.)*
+
+        | Category | Recommendation |
+        |----------|----------------|
+        | **Suggested Actions** | • [Action 1] <br>• [Action 2] <br>• [Action 3] |
+        | **Monitoring Requirements** | • [Requirement 1] <br>• [Requirement 2] <br>• [Requirement 3] |
+        | **Red Flags to Watch For** | • [Red flag 1] <br>• [Red flag 2] <br>• [Red flag 3] |
+
+        Important rules for your behavior:  
+        - Always use the exact table format shown above with bullet points separated by <br> tags
+        - Present information in a professional, concise, and medically accurate manner
+        - Do not make definitive diagnostic or treatment claims — state only facts, guidelines, or possible considerations
+        - Include the disclaimer exactly as shown
+        - Focus on practical, actionable recommendations based on the prediction and vitals provided
+        """
+
+        # Initialize conversation memory
+        self.messages = [
+            {"role": "system", "content": self.system_prompt}
+        ]
+
+    def chat(self, user_input, stream=True, temperature=0.7, max_tokens=8192, top_p=1):
+        """Send a message to the assistant and get a reply."""
+        self.messages.append({"role": "user", "content": user_input})
+
+        completion = self.client.chat.completions.create(
+            model=self.model,
+            messages=self.messages,
+            temperature=temperature,
+            max_completion_tokens=max_tokens,
+            top_p=top_p,
+            stream=stream
+        )
+
+        assistant_reply = ""
+        if stream:
+            for chunk in completion:
+                delta = chunk.choices[0].delta.content or ""
+                print(delta, end="")
+                assistant_reply += delta
+        else:
+            assistant_reply = completion.choices[0].message.content
+            print(assistant_reply)
+
+        # Save assistant reply
+        self.messages.append({"role": "assistant", "content": assistant_reply})
+
+        return assistant_reply
+
+    def reset_conversation(self):
+        """Reset conversation memory to system prompt only."""
+        self.messages = [{"role": "system", "content": self.system_prompt}]
