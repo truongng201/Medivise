@@ -1,5 +1,5 @@
 from ..QueryBase import QueryBase
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 class UpdatePatientInfoQuery(QueryBase):
     def update_account_info(self, account_id, fields):
@@ -100,9 +100,9 @@ class UpdatePatientInfoQuery(QueryBase):
             
             # Add recorded_time update
             set_clauses.append("recorded_time = %s")
-            params.append(datetime.now())
+            params.append(datetime.now(timezone(timedelta(hours=7))))
             params.append(patient_id)
-            print(query)
+
             query = f"""
                 UPDATE patient_health_metrics 
                 SET {', '.join(set_clauses)}
@@ -111,7 +111,7 @@ class UpdatePatientInfoQuery(QueryBase):
         else:
             # Insert new record
             field_names = list(fields.keys()) + ['patient_id', 'recorded_time']
-            field_values = list(fields.values()) + [patient_id, datetime.now()]
+            field_values = list(fields.values()) + [patient_id, datetime.now(timezone(timedelta(hours=7)))]
             placeholders = ', '.join(['%s'] * len(field_names))
             
             query = f"""
@@ -119,7 +119,7 @@ class UpdatePatientInfoQuery(QueryBase):
                 VALUES ({placeholders})
             """
             params = field_values
-        
+        print(query, params)
         result = self.db.execute_non_query(query, tuple(params))
         if not result or result == 0:
             return False

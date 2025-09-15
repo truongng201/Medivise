@@ -13,29 +13,49 @@ import { useToast } from "@/hooks/use-toast"
 
 interface DashboardProps {
   user: any,
-  authData?: any
+  authData?: any,
+  onUserUpdate?: (updatedUser: any) => void
 }
 
-export default function Dashboard({ user, authData }: DashboardProps) {
+export default function Dashboard({ user, authData, onUserUpdate }: DashboardProps) {
   const [healthMetrics, setHealthMetrics] = useState<any[]>(Array.isArray(user?.health_metrics) ? user?.health_metrics : []);
   const [editingMetric, setEditingMetric] = useState<{ index: number; value: string } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isUpdateAllDialogOpen, setIsUpdateAllDialogOpen] = useState(false);
   const [allMetricsValues, setAllMetricsValues] = useState<{ [key: number]: string }>({});
+  const [isSavingMetric, setIsSavingMetric] = useState(false);
   
   const { post, loading } = useApi({ role: 'patient' });
   const { toast } = useToast();
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "good":
-        return <CheckCircle className="h-4 w-4 text-slate-400" />
-      case "warning":
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />
-      default:
-        return <CheckCircle className="h-4 w-4 text-gray-400" />
+  const refreshUserInfo = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/patient/get_patient_info`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          "Authorization": `${authData?.access_token || ""}`
+        }
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        const updatedUser = responseData.data;
+        
+        // Update local health metrics state
+        if (Array.isArray(updatedUser?.health_metrics)) {
+          setHealthMetrics(updatedUser.health_metrics);
+        }
+        
+        // Call parent component's update function if provided
+        if (onUserUpdate) {
+          onUserUpdate(updatedUser);
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing user info:', error);
     }
-  }
+  };
 
   const handleUpdateMetric = (index: number) => {
     const metric = healthMetrics[index];
@@ -43,16 +63,73 @@ export default function Dashboard({ user, authData }: DashboardProps) {
     setIsDialogOpen(true);
   }
 
-  const handleSaveMetric = () => {
+  const handleSaveMetric = async () => {
     if (editingMetric) {
-      const updatedMetrics = [...healthMetrics];
-      updatedMetrics[editingMetric.index] = {
-        ...updatedMetrics[editingMetric.index],
-        value: parseFloat(editingMetric.value) || 0
-      };
-      setHealthMetrics(updatedMetrics);
-      setIsDialogOpen(false);
-      setEditingMetric(null);
+      setIsSavingMetric(true);
+      try {
+        const updatedMetrics = [...healthMetrics];
+        updatedMetrics[editingMetric.index] = {
+          ...updatedMetrics[editingMetric.index],
+          value: parseFloat(editingMetric.value) || 0
+        };
+
+        // Prepare the payload for the API - send only the edited field
+        const fieldMapping: { [key: string]: string } = {
+          'diastolic blood pressure': 'diastolic_bp',
+          'systolic blood pressure': 'systolic_bp',
+          'urea nitrogen': 'urea_nitrogen',
+          'carbon dioxide': 'carbon_dioxide',
+          'heart rate': 'heart_rate',
+          'respiratory rate': 'respiratory_rate',
+        };
+
+        const payload: { [key: string]: number } = {};
+        const editedMetric = updatedMetrics[editingMetric.index];
+        if (editedMetric?.name) {
+          const normalizedName = editedMetric.name.toLowerCase();
+          const fieldName = fieldMapping[normalizedName] || normalizedName.replace(/\s+/g, '_');
+          payload[fieldName] = editedMetric.value || 0;
+        }
+
+        console.log('Single metric payload being sent:', payload); // Debug log
+
+        // Call the API
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/patient/update_patient_info`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            "Authorization": `${authData?.access_token || ""}`
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update health metric');
+        }
+
+        // Update local state
+        setHealthMetrics(updatedMetrics);
+        setIsDialogOpen(false);
+        setEditingMetric(null);
+
+        // Refresh user info to get updated data
+        await refreshUserInfo();
+
+        toast({
+          title: "Success",
+          description: `${healthMetrics[editingMetric.index]?.name} has been updated successfully.`,
+        });
+
+      } catch (error) {
+        console.error('Error updating metric:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update health metric. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSavingMetric(false);
+      }
     }
   }
 
@@ -79,30 +156,54 @@ export default function Dashboard({ user, authData }: DashboardProps) {
         value: parseFloat(allMetricsValues[index]) || metric.value || 0
       }));
 
-      // Prepare the payload for the API
-      const payload = {
-        health_metrics: updatedMetrics
-      };
+        // Prepare the payload for the API - send only fields that were changed
+        const fieldMapping: { [key: string]: string } = {
+          'diastolic blood pressure': 'diastolic_bp',
+          'systolic blood pressure': 'systolic_bp',
+          'urea nitrogen': 'urea_nitrogen',
+          'carbon dioxide': 'carbon_dioxide',
+          'heart rate': 'heart_rate',
+          'respiratory rate': 'respiratory_rate',
+          'tobacco smoking status': 'tobacco_smoking_status',
+          'pain severity': 'pain_severity'
+        };
 
-      // Call the API
-      await post(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/patient/update_patient_info`, payload);
+        const payload: { [key: string]: number } = {};
+        updatedMetrics.forEach((metric, index) => {
+          // Only include fields that have been edited (have a value in allMetricsValues)
+          if (metric?.name && allMetricsValues[index] !== undefined && allMetricsValues[index] !== '') {
+            const normalizedName = metric.name.toLowerCase();
+            const fieldName = fieldMapping[normalizedName] || normalizedName.replace(/\s+/g, '_');
+            payload[fieldName] = metric.value || 0;
+          }
+        });      console.log('Payload being sent:', payload); // Debug log
+
+      // Call the API using fetch
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/patient/update_patient_info`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          "Authorization": authData?.access_token || ""
+          "Authorization": `${authData?.access_token || ""}`
         },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
         throw new Error('Failed to update health metrics');
       }
+
+      const responseData = await response.json();
+      console.log('API Response:', responseData);
 
       // Update local state
       setHealthMetrics(updatedMetrics);
       setIsUpdateAllDialogOpen(false);
       setAllMetricsValues({});
+
+      // Refresh user info to get updated data
+      await refreshUserInfo();
 
       toast({
         title: "Success",
@@ -137,7 +238,12 @@ export default function Dashboard({ user, authData }: DashboardProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user?.fullname}</h1>
-          <p className="text-gray-600">Track your key health indicators over time. Current update: {user?.recorded_time ? new Date(user.recorded_time).toLocaleString('en-GB', { timeZone: 'GMT', dateStyle: 'medium', timeStyle: 'medium' }) + ' GMT' : "No updates available"}</p>
+          <p className="text-gray-600">Track your key health indicators over time. Current update: {user?.recorded_time ? (() => {
+            const date = new Date(user.recorded_time);
+            // Add 7 hours to the date if it's not already in the correct timezone
+            const vietnamTime = new Date(date.getTime() + (7 * 60 * 60 * 1000));
+            return vietnamTime.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'medium' }) + ' (UTC+7)';
+          })() : "No updates available"}</p>
         </div>
         <Button 
           onClick={handleUpdateAllMetrics}
@@ -180,7 +286,16 @@ export default function Dashboard({ user, authData }: DashboardProps) {
                     >
                       {metric?.value} {metric?.unit}
                     </span>
-                    <Badge variant={metric?.status === "excellent" ? "default" : "secondary"} className="text-xs">
+                    <Badge 
+                      variant={
+                        metric?.status === "excellent" || metric?.status === "good" ? "default" : 
+                        metric?.status === "warning" ? "destructive" : "secondary"
+                      } 
+                      className={`text-xs ${
+                        metric?.status === "excellent" || metric?.status === "good" ? "bg-green-500 hover:bg-green-600" :
+                        metric?.status === "warning" ? "bg-yellow-500 hover:bg-yellow-600" : ""
+                      }`}
+                    >
                       {metric?.status}
                     </Badge>
                   </div>
@@ -259,8 +374,15 @@ export default function Dashboard({ user, authData }: DashboardProps) {
             <Button variant="outline" onClick={handleCancelEdit}>
               Cancel
             </Button>
-            <Button onClick={handleSaveMetric}>
-              Update Value
+            <Button onClick={handleSaveMetric} disabled={isSavingMetric}>
+              {isSavingMetric ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Update Value"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
